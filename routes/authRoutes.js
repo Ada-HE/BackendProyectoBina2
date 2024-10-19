@@ -22,6 +22,7 @@ router.post('/mfa/verify', authController.verifyMFA); // Verificar el código TO
 router.post('/resend-code', authController.reenviarCodigo); // Reenviar código de verificación por correo
 
 router.post('/logout', authController.logout); // Cerrar sesión
-
+// Ruta para verificar la autenticación
+router.get('/verificar-autenticacion', authController.verificarAutenticacion);
 
 module.exports = router; // Exporta el router para usar en tu servidor principal

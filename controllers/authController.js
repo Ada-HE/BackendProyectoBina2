@@ -346,4 +346,5 @@ module.exports = {
   setupMFA,
   verifyMFA,
   logout,
+  verificarAutenticacion,
 };
