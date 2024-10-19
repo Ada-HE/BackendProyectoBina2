@@ -299,8 +299,11 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',       sameSite: 'Strict',
-      maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
+      secure: true,
+      sameSite: 'Strict',
+      maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días
+      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
