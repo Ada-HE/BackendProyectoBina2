@@ -315,6 +315,7 @@ const logout = (req, res) => {
       secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
       sameSite: 'Strict',  // Igual que cuando la cookie fue creada
       path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+      domain: 'consultoriodental.isoftuthh.com',
       expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
     });
 
