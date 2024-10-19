@@ -299,7 +299,7 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: false, // Desactiva el atributo Secure en desarrollo local
+      secure: process.env.NODE_ENV === 'production', // Secure debe ser true si estás en producción (HTTPS)
       sameSite: 'None', // Necesario para compartir cookies entre dominios
       maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días
       path: '/', // Asegúrate de que esté disponible en todas las rutas
@@ -313,7 +313,7 @@ const logout = (req, res) => {
   // Al cerrar sesión
 res.cookie('sessionToken', '', {
   httpOnly: true,
-  secure: false, // Desactiva el atributo Secure en desarrollo local
+  secure: process.env.NODE_ENV === 'production', // El mismo valor que cuando la cookie fue creada
   sameSite: 'Strict', // El mismo valor que cuando la cookie fue creada
   path: '/', // El mismo valor que cuando la cookie fue creada
   expires: new Date(0), // Fecha en el pasado para eliminar la cookie
