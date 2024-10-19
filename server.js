@@ -1,27 +1,30 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const cookieParser = require('cookie-parser'); // Middleware para manejar cookies
-const authRoutes = require('./routes/authRoutes');  // Importar las rutas de autenticación
+const cookieParser = require('cookie-parser');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
+// Logs para verificar variables de entorno
+console.log('Entorno actual:', process.env.NODE_ENV);
+console.log('Puerto definido:', process.env.PORT);
+
 // Middleware
 app.use(express.json());
-app.use(cookieParser()); // Usar cookie-parser
+app.use(cookieParser());
 
-// Configurar CORS para permitir solicitudes desde múltiples dominios (producción y desarrollo)
+// Configurar CORS
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://consultoriodental.isoftuthh.com', 'https://backendproyectobina2.onrender.com'] // Frontend y backend en producción
-    : 'http://localhost:3000',  // Dominio de desarrollo (frontend local)
-  credentials: true, // Permitir envío de cookies y credenciales cruzadas
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos HTTP permitidos
-  allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
+    ? ['https://consultoriodental.isoftuthh.com', 'https://backendproyectobina2.onrender.com']
+    : 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
-
 
 // Asegurar que el preflight de OPTIONS esté habilitado
 app.options('*', cors(corsOptions));
@@ -31,7 +34,7 @@ app.use('/api', authRoutes);
 
 // Middleware para manejar errores globales
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err.stack);
   res.status(500).send('¡Algo salió mal en el servidor!');
 });
 
