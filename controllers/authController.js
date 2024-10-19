@@ -300,7 +300,7 @@ const login = async (req, res) => {
     res.cookie('sessionToken', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'Strict',
+      SameSite: 'None',
       maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días
       path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
 
@@ -315,8 +315,7 @@ const logout = (req, res) => {
     res.cookie('sessionToken', '', { 
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
-      sameSite: 'Strict',  // Igual que cuando la cookie fue creada
-      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+      SameSite: 'None',      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
       expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
     });
 
