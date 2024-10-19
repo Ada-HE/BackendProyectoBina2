@@ -303,7 +303,13 @@ const login = async (req, res) => {
       sameSite: 'Strict',
       maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
     });
-
+    console.log('Cookie creada:', {
+      token,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
+      maxAge: 1000 * 60 * 60 * 24 * 15,
+      path: '/'
+    });
     return res.json({ message: 'Inicio de sesión exitoso', token });
   });
 };
@@ -312,19 +318,26 @@ const logout = (req, res) => {
   try {
     res.cookie('sessionToken', '', { 
       httpOnly: true, 
-      secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
-      sameSite: 'Strict',  // Igual que cuando la cookie fue creada
-      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
-      expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'Strict', 
+      path: '/',  
+      expires: new Date(0),  
     });
 
-    console.log('Cookie de sesión eliminada correctamente'); // Mensaje para indicar que la cookie ha sido eliminada
+    console.log('Cookie eliminada:', {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
+      path: '/',
+      expires: new Date(0)
+    });
+
     res.status(200).json({ message: 'Sesión cerrada correctamente' });
   } catch (error) {
-    console.error('Error al eliminar la cookie de sesión:', error); // Manejo de errores
+    console.error('Error al eliminar la cookie de sesión:', error);
     res.status(500).json({ message: 'Error al cerrar la sesión. Inténtalo de nuevo.' });
   }
 };
+
 
 
 
