@@ -8,6 +8,7 @@ const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const userModel = require('../models/userModel');
 
+
 // Configurar transporte de Nodemailer
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -299,8 +300,8 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'Strict',
+      secure: false,
+      sameSite: 'None',
       maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
     });
 
@@ -319,7 +320,22 @@ const logout = (req, res) => {
 
   res.status(200).json({ message: 'Sesión cerrada correctamente' });
 };
+// Verificar si el token de autenticación es válido
+const verificarAutenticacion = (req, res) => {
+  const token = req.cookies.sessionToken; // Leer el token de las cookies
+  if (!token) {
+    return res.status(401).json({ message: 'No estás autenticado' });
+  }
 
+  // Verificar el token
+  jwt.verify(token, 'secreto_super_seguro', (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token inválido o expirado' });
+    }
+    // Si el token es válido, enviamos la información del usuario
+    return res.json({ message: 'Autenticación exitosa', tipoUsuario: decoded.tipo });
+  });
+};
 
 
 module.exports = {
