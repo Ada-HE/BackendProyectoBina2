@@ -299,9 +299,10 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'Strict',
-      maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
+      secure: false, // Desactiva el atributo Secure en desarrollo local
+      sameSite: 'None', // Necesario para compartir cookies entre dominios
+      maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días
+      path: '/', // Asegúrate de que esté disponible en todas las rutas
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
@@ -309,13 +310,14 @@ const login = async (req, res) => {
 };
 // Función para cerrar sesión y eliminar la cookie en producción
 const logout = (req, res) => {
-  res.cookie('sessionToken', '', { 
-    httpOnly: true, 
-    secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
-    sameSite: 'none',  // Igual que cuando la cookie fue creada
-    path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
-    expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
-  });
+  // Al cerrar sesión
+res.cookie('sessionToken', '', {
+  httpOnly: true,
+  secure: false, // Desactiva el atributo Secure en desarrollo local
+  sameSite: 'Strict', // El mismo valor que cuando la cookie fue creada
+  path: '/', // El mismo valor que cuando la cookie fue creada
+  expires: new Date(0), // Fecha en el pasado para eliminar la cookie
+});
 
   res.status(200).json({ message: 'Sesión cerrada correctamente' });
 };

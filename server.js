@@ -9,10 +9,10 @@ app.use(express.json());
 
 // Configurar CORS para permitir solicitudes desde múltiples dominios (producción y desarrollo)
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://consultoriodental.isoftuthh.com'], // Especificar los orígenes permitidos
-  credentials: true, // Permitir cookies
+  origin: ['http://localhost:3000', 'https://consultoriodental.isoftuthh.com'], // Dominios permitidos
+  credentials: true, // Necesario para que las cookies sean enviadas
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos HTTP permitidos
-  allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
+  allowedHeaders: ['Content-Type', 'Authorization'], // Headers permitidos
 };
 
 app.use(cors(corsOptions));
