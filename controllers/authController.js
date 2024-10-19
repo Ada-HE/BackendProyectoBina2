@@ -245,8 +245,8 @@ const verifyMFA = (req, res) => {
       // Establecer la cookie de sesión con el token
       res.cookie('sessionToken', token, {
         httpOnly: true,  // La cookie no es accesible mediante JavaScript del lado del cliente
-        secure: true, // Solo enviar la cookie si está en producción
-        sameSite: 'none',  // Protección contra CSRF
+        secure: process.env.NODE_ENV === 'production', // Solo enviar la cookie si está en producción
+        sameSite: 'None',  // Permite la cookie entre dominios
         maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
         path: '/', // Asegúrate de que la cookie esté disponible en todas las rutas
       });
@@ -299,34 +299,27 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'None',
-      maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días
-      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
-
+      secure: process.env.NODE_ENV === 'production', // Solo envía cookies con HTTPS
+      sameSite: 'None',  // Permitir entre dominios
+      maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
   });
 };
+
 // Función para cerrar sesión y eliminar la cookie en producción
 const logout = (req, res) => {
-  try {
-    res.cookie('sessionToken', '', { 
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
-      sameSite: 'None',      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
-      expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
-    });
+  res.cookie('sessionToken', '', { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
+    sameSite: 'None',  // Igual que cuando la cookie fue creada
+    path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+    expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
+  });
 
-    console.log('Cookie de sesión eliminada correctamente'); // Mensaje para indicar que la cookie ha sido eliminada
-    res.status(200).json({ message: 'Sesión cerrada correctamente' });
-  } catch (error) {
-    console.error('Error al eliminar la cookie de sesión:', error); // Manejo de errores
-    res.status(500).json({ message: 'Error al cerrar la sesión. Inténtalo de nuevo.' });
-  }
+  res.status(200).json({ message: 'Sesión cerrada correctamente' });
 };
-
 
 
 
