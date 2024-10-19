@@ -299,7 +299,7 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production', 
       sameSite: 'Strict',
       maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
     });
