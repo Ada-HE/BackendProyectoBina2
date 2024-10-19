@@ -246,7 +246,7 @@ const verifyMFA = (req, res) => {
       res.cookie('sessionToken', token, {
         httpOnly: true,  // La cookie no es accesible mediante JavaScript del lado del cliente
         secure: process.env.NODE_ENV === 'production', // Solo enviar la cookie si está en producción
-        sameSite: 'None',  // Permite la cookie entre dominios
+        sameSite: 'Strict',  // Protección contra CSRF
         maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
         path: '/', // Asegúrate de que la cookie esté disponible en todas las rutas
       });
@@ -299,44 +299,26 @@ const login = async (req, res) => {
     // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Solo envía cookies con HTTPS
-      sameSite: 'None',  // Permitir entre dominios
+      secure: true,
+      sameSite: 'Strict',
       maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
   });
 };
-
 // Función para cerrar sesión y eliminar la cookie en producción
-// Función para cerrar sesión y eliminar la cookie en producción y desarrollo
 const logout = (req, res) => {
-  try {
-    // Verificar si la cookie está presente
-    const tokenCookie = req.cookies.sessionToken;
-    if (!tokenCookie) {
-      console.error('No se encontró ninguna cookie para eliminar.');
-      return res.status(400).json({ message: 'No se encontró ninguna cookie de sesión' });
-    }
+  res.cookie('sessionToken', '', { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
+    sameSite: 'none',  // Igual que cuando la cookie fue creada
+    path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+    expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
+  });
 
-    // Configuración para eliminar la cookie
-    res.cookie('sessionToken', '', { 
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === 'production', // Solo usa Secure si está en producción
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Strict', // Permitir entre dominios en producción
-      path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
-      expires: new Date(0),  // Fecha en el pasado para eliminarla
-    });
-
-    console.log('Cookie eliminada correctamente');
-    res.status(200).json({ message: 'Sesión cerrada correctamente' });
-  } catch (error) {
-    console.error('Error al eliminar la cookie:', error);
-    res.status(500).json({ message: 'Error al cerrar la sesión. Inténtalo de nuevo.' });
-  }
+  res.status(200).json({ message: 'Sesión cerrada correctamente' });
 };
-
-
 
 
 
