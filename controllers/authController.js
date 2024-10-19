@@ -308,16 +308,17 @@ const login = async (req, res) => {
 };
 // Nueva función para cerrar sesión
 const logout = (req, res) => {
-  // Eliminar la cookie de sesión
   res.cookie('sessionToken', '', { 
     httpOnly: true, 
-    secure: true, 
-    sameSite: 'Strict', 
-    expires: new Date(0)  // Establece fecha de expiración pasada para eliminar la cookie
+    secure: true,  // Asegúrate de que esté habilitado si estás usando HTTPS
+    sameSite: 'Strict', // Otras opciones son 'Lax' o 'None' según tu implementación
+    path: '/',  // Asegúrate de que coincide con el path original
+    expires: new Date(0)  // Fecha de expiración pasada para eliminar la cookie
   });
 
   res.status(200).json({ message: 'Sesión cerrada correctamente' });
 };
+
 
 module.exports = {
   register,
