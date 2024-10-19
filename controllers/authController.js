@@ -277,27 +277,31 @@ const login = async (req, res) => {
 
     const usuario = result[0];
 
+    // Verificar si la cuenta está bloqueada
     if (usuario.cuenta_bloqueada) {
       return res.status(403).json({ message: 'Cuenta bloqueada debido a demasiados intentos fallidos.' });
     }
 
+    // Verificar la contraseña
     const validPassword = await bcrypt.compare(password, usuario.password);
     if (!validPassword) {
       return res.status(400).json({ message: 'Contraseña incorrecta.' });
     }
 
+    // Si el usuario tiene MFA habilitado
     if (usuario.mfa_secret && !usuario.mfaVerificado) {
-      return res.json({ requireMfa: true });
+      return res.json({ requireMfa: true }); // Indicar que se requiere MFA
     }
 
+    // Si ya pasó el MFA o no tiene MFA habilitado, generamos un token con mfaVerificado = true
     const token = generarTokenSesion(usuario, true);
 
+    // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Secure debe ser true en producción
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Strict', // En producción si tienes frontend separado
-      maxAge: 1000 * 60 * 60 * 24 * 15, 
-      path: '/', 
+      secure: true,
+      sameSite: 'Strict',
+      maxAge: 1000 * 60 * 60 * 24 * 15 // 15 días
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
@@ -305,16 +309,19 @@ const login = async (req, res) => {
 };
 // Función para cerrar sesión y eliminar la cookie en producción
 const logout = (req, res) => {
-  res.cookie('sessionToken', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // El mismo valor que cuando la cookie fue creada
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Strict', // El mismo valor que cuando la cookie fue creada
-    path: '/',
-    expires: new Date(0),
+  res.cookie('sessionToken', '', { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production', // Igual que cuando la cookie fue creada
+    sameSite: 'Strict',  // Igual que cuando la cookie fue creada
+    path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+    expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
   });
 
   res.status(200).json({ message: 'Sesión cerrada correctamente' });
 };
+
+
+
 module.exports = {
   register,
   login,
