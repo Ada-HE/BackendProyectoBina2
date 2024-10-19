@@ -1,6 +1,6 @@
-const express = require('express');
-const cors = require('cors');
-const authRoutes = require('./routes/authRoutes');  // Importar las rutas de autenticación
+import express from 'express';
+import cors from 'cors';
+import authRoutes from './routes/authRoutes.js';  // Asegúrate de incluir la extensión .js
 
 const app = express();
 
