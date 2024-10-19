@@ -323,7 +323,7 @@ const logout = (req, res) => {
     res.cookie('sessionToken', '', { 
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production', // Solo usa Secure si está en producción
-      sameSite: 'None',  // Permitir cookies entre dominios
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Strict', // Permitir entre dominios en producción
       path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
       expires: new Date(0),  // Fecha en el pasado para eliminarla
     });

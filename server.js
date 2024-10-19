@@ -9,13 +9,17 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser()); // Añadir cookie-parser
 
-// Configuración de CORS en tu backend (Render)
+// Configurar CORS para permitir solicitudes desde múltiples dominios (producción y desarrollo)
 const corsOptions = {
-  origin: ['https://consultoriodental.isoftuthh.com'],  // Dominio del frontend
-  credentials: true, // Permitir envío de cookies
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://consultoriodental.isoftuthh.com'] // Dominio de producción
+    : ['http://localhost:3000'],  // Dominio local para desarrollo
+  credentials: true, // Permitir cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos HTTP permitidos
   allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
 };
+app.use(cors(corsOptions));
+
 
 app.use(cors(corsOptions));
 
