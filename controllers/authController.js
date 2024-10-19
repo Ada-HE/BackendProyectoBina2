@@ -246,7 +246,7 @@ const verifyMFA = (req, res) => {
       res.cookie('sessionToken', token, {
         httpOnly: true,  // La cookie no es accesible mediante JavaScript del lado del cliente
         secure: process.env.NODE_ENV === 'production', // Solo enviar la cookie si está en producción
-        sameSite: 'none',  // Protección contra CSRF
+        sameSite: 'None',  // Protección contra CSRF
         maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
         path: '/', // Asegúrate de que la cookie esté disponible en todas las rutas
       });
