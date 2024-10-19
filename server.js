@@ -7,12 +7,18 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// Configurar CORS para permitir solicitudes desde localhost:3000
+// Configurar CORS para permitir solicitudes desde múltiples dominios (producción y desarrollo)
 const corsOptions = {
-  origin: 'http://localhost:3000', // Especificar el origen de tu frontend
+  origin: ['http://localhost:3000', 'https://consultoriodental.isoftuthh.com'], // Especificar los orígenes permitidos
   credentials: true, // Permitir cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos HTTP permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
 };
+
 app.use(cors(corsOptions));
+
+// Asegurar que el preflight de OPTIONS esté habilitado
+app.options('*', cors(corsOptions));
 
 // Usar las rutas de autenticación
 app.use('/api', authRoutes);
