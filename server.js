@@ -18,8 +18,6 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos HTTP permitidos
   allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
 };
-app.use(cors(corsOptions));
-
 
 app.use(cors(corsOptions));
 
