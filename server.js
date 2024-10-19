@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 const cookieParser = require('cookie-parser'); // Middleware para manejar cookies
 const authRoutes = require('./routes/authRoutes');  // Importar las rutas de autenticación
 
@@ -12,14 +13,15 @@ app.use(cookieParser()); // Usar cookie-parser
 // Configurar CORS para permitir solicitudes desde múltiples dominios (producción y desarrollo)
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://consultoriodental.isoftuthh.com' // Dominio de producción
-    : 'http://localhost:3000',  // Dominio de desarrollo
-  credentials: true, // Permitir cookies y credenciales cruzadas
+    ? ['https://consultoriodental.isoftuthh.com', 'https://backendproyectobina2.onrender.com'] // Frontend y backend en producción
+    : 'http://localhost:3000',  // Dominio de desarrollo (frontend local)
+  credentials: true, // Permitir envío de cookies y credenciales cruzadas
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos HTTP permitidos
   allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
 };
 
 app.use(cors(corsOptions));
+
 
 // Asegurar que el preflight de OPTIONS esté habilitado
 app.options('*', cors(corsOptions));
