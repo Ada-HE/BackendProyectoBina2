@@ -301,7 +301,7 @@ const login = async (req, res) => {
     res.cookie('sessionToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Solo en producción para HTTPS
-      sameSite: 'Strict', // Cambia a 'None' si tienes problemas con otros dominios
+      sameSite: 'None', // Cambia a 'None' si tienes problemas con otros dominios
       maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
       path: '/'
     });

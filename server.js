@@ -37,6 +37,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   res.status(500).send('¡Algo salió mal en el servidor!');
 });
+console.log('Entorno actual:', process.env.NODE_ENV);
 
 // Iniciar servidor
 const PORT = process.env.PORT || 4000;
