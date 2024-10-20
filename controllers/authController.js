@@ -304,7 +304,6 @@ const login = async (req, res) => {
       sameSite: 'None', // Cambia a 'None' si tienes problemas con otros dominios
       maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
       path: '/',
-      domain: 'consultoriodental.isoftuthh.com', // Opción para definir dominio si es necesario
 
     });
 
