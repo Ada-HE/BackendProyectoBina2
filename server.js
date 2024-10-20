@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const xss = require('xss-clean'); // Importa xss-clean
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/authRoutes');
@@ -14,16 +15,18 @@ console.log('Puerto definido:', process.env.PORT);
 app.use(express.json());
 app.use(cookieParser());
 
+// Middleware de xss-clean para evitar inyecciones XSS
+app.use(xss()); // Este middleware limpia las entradas de scripts maliciosos
+
 // Configurar CORS
 const corsOptions = {
-  origin: ['https://consultoriodental.isoftuthh.com'],
+  origin: ['https://consultoriodental.isoftuthh.com', 'http://localhost:3000'],
   credentials: true,  // Esto permite enviar cookies con las solicitudes
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
-
 
 // Asegurar que el preflight de OPTIONS esté habilitado
 app.options('*', cors(corsOptions));
@@ -36,6 +39,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   res.status(500).send('¡Algo salió mal en el servidor!');
 });
+
 console.log('Entorno actual:', process.env.NODE_ENV);
 
 // Iniciar servidor

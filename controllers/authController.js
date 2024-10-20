@@ -338,6 +338,97 @@ const verificarAutenticacion = (req, res) => {
     return res.json({ message: 'Autenticación exitosa', tipoUsuario: decoded.tipo });
   });
 };
+// Función para enviar el correo con el enlace de recuperación
+const enviarCorreoRecuperacion = async (correo, token) => {
+  const link = `http://localhost:3000/reset-password/${token}`;
+  const mailOptions = {
+    from: '20221030@uthh.edu.mx',
+    to: correo,
+    subject: 'Restablecimiento de contraseña',
+    text: `Haz clic en el siguiente enlace para restablecer tu contraseña: ${link}`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Correo de recuperación enviado');
+  } catch (error) {
+    console.error('Error al enviar el correo de recuperación:', error);
+  }
+};
+
+// Solicitar recuperación de contraseña
+const solicitarRecuperacion = async (req, res) => {
+  const { correo } = req.body;
+
+  try {
+    // Verificar si el usuario existe
+    userModel.findUserByEmail(correo, async (err, user) => {
+      if (err || user.length === 0) {
+        return res.status(400).json({ message: 'Usuario no encontrado.' });
+      }
+
+      // Generar token de recuperación y establecer caducidad (15 minutos)
+      const token = crypto.randomBytes(20).toString('hex');
+      const expiration = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+      // Guardar el token en la base de datos
+      userModel.savePasswordResetToken(correo, token, expiration, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error al guardar el token.' });
+        }
+
+        // Enviar el correo con el enlace de recuperación
+        enviarCorreoRecuperacion(correo, token);
+        return res.json({ message: 'Correo de recuperación enviado.' });
+      });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error en el servidor.' });
+  }
+};
+
+const cambiarContrasena = async (req, res) => {
+  const { token, newPassword, confirmPassword } = req.body;
+  
+  // Imprimir para verificar
+  console.log("Token recibido:", token);
+  console.log("Nueva contraseña recibida:", newPassword);
+  console.log("Confirmación de contraseña recibida:", confirmPassword);
+
+  // Validar que las contraseñas coincidan
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: 'Las contraseñas no coinciden.' });
+  }
+
+  try {
+    // Verificar si el token es válido y no ha expirado
+    userModel.findUserByResetToken(token, async (err, result) => {
+      if (err || result.length === 0) {
+        return res.status(400).json({ message: 'Token inválido o expirado.' });
+      }
+
+      const correo = result[0].correo;  // Obtener el correo del usuario con ese token
+      console.log("Usuario encontrado con el token, correo:", correo);
+
+      // Encriptar la nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Actualizar la contraseña del usuario y limpiar el token y la expiración
+      userModel.updatePasswordByEmail(correo, hashedPassword, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error al actualizar la contraseña.' });
+        }
+
+        console.log("Contraseña actualizada correctamente para el correo:", correo);
+        return res.json({ message: 'Contraseña actualizada exitosamente.' });
+      });
+    });
+  } catch (error) {
+    console.error('Error en el servidor:', error);
+    return res.status(500).json({ message: 'Error en el servidor.' });
+  }
+};
+
 
 
 module.exports = {
@@ -349,4 +440,6 @@ module.exports = {
   verifyMFA,
   logout,
   verificarAutenticacion,
+  solicitarRecuperacion,
+  cambiarContrasena,
 };

@@ -67,7 +67,46 @@ const findUserByEmailOrPhone = (correo, telefono, callback) => {
   const query = 'SELECT * FROM usuarios WHERE correo = ? OR telefono = ?';
   db.query(query, [correo, telefono], callback);
 };
+// Función para buscar un usuario por su reset_token
+const findUserByResetToken = (token, callback) => {
+  const query = `
+    SELECT correo 
+    FROM usuarios 
+    WHERE reset_token = ? 
+    AND reset_token_expiration > DATE_SUB(NOW(), INTERVAL 6 HOUR)
+  `;
+  db.query(query, [token], callback);
+};
 
+// Función para actualizar la contraseña usando el correo
+const updatePasswordByEmail = (correo, newPassword, callback) => {
+  const query = `
+    UPDATE usuarios 
+    SET password = ?, reset_token = NULL, reset_token_expiration = NULL 
+    WHERE correo = ?
+  `;
+  db.query(query, [newPassword, correo], (err, result) => {
+    if (err) {
+      console.log("Error al ejecutar la consulta SQL para actualizar la contraseña:", err);
+      return callback(err); // Devolver el error
+    }
+
+    if (result.affectedRows === 0) {
+      console.log("No se encontró ningún usuario con ese correo.");
+      return callback(null, { message: 'No se encontró ningún usuario con ese correo.' });
+    }
+
+    console.log("Contraseña actualizada correctamente para el correo:", correo);
+    return callback(null, { message: 'Contraseña actualizada exitosamente.' });
+  });
+};
+// Guardar el token de restablecimiento de contraseña y su fecha de caducidad
+const savePasswordResetToken = (correo, token, expiration, callback) => {
+  const query = `
+    UPDATE usuarios SET reset_token = ?, reset_token_expiration = ? WHERE correo = ?
+  `;
+  db.query(query, [token, expiration, correo], callback);
+};
 module.exports = {
   createUser,
   findUserByEmail,
@@ -79,4 +118,7 @@ module.exports = {
   bloquearCuenta,
   reiniciarIntentosFallidos,
   findUserByEmailOrPhone,
+  updatePasswordByEmail,
+  findUserByResetToken,
+  savePasswordResetToken,
 };

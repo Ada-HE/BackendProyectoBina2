@@ -24,5 +24,10 @@ router.post('/resend-code', authController.reenviarCodigo); // Reenviar código 
 router.post('/logout', authController.logout); // Cerrar sesión
 // Ruta para verificar la autenticación
 router.get('/verificar-autenticacion', authController.verificarAutenticacion);
+// Ruta para solicitar el correo de recuperación de contraseña
+router.post('/solicitar-recuperacion', authController.solicitarRecuperacion);
+
+// Ruta para cambiar la contraseña
+router.post('/cambiar-contrasena', authController.cambiarContrasena);
 
 module.exports = router; // Exporta el router para usar en tu servidor principal
