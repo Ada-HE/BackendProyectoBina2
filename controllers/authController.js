@@ -247,7 +247,7 @@ const verifyMFA = (req, res) => {
       res.cookie('sessionToken', token, {
         httpOnly: true,  // La cookie no es accesible mediante JavaScript del lado del cliente
         secure: true, // Solo enviar la cookie si está en producción
-        sameSite: 'Strict',  // Protección contra CSRF
+        sameSite: 'None',  // Protección contra CSRF
         maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
         path: '/', // Asegúrate de que la cookie esté disponible en todas las rutas
       });
@@ -316,7 +316,7 @@ const logout = (req, res) => {
   res.cookie('sessionToken', '', { 
     httpOnly: true, 
     secure: true, // Igual que cuando la cookie fue creada
-    sameSite: 'Strict',  // Igual que cuando la cookie fue creada
+    sameSite: 'None',  // Igual que cuando la cookie fue creada
     path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
     expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
   });
