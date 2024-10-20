@@ -304,7 +304,7 @@ const login = async (req, res) => {
       sameSite: 'None', // Cambia a 'None' si tienes problemas con otros dominios
       maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
       path: '/',
-      domain: 'consultoriodental.isoftuthh.com', // Opción para definir dominio si es necesario
+      domain: 'isoftuthh.com', // Opción para definir dominio si es necesario
 
     });
 
@@ -318,6 +318,7 @@ const logout = (req, res) => {
     secure: true, // Igual que cuando la cookie fue creada
     sameSite: 'None',  // Igual que cuando la cookie fue creada
     path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
+    domain: '.isoftuthh.com', 
     expires: new Date(0),  // Fecha de expiración pasada para eliminar la cookie
   });
 
