@@ -16,15 +16,14 @@ app.use(cookieParser());
 
 // Configurar CORS
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://consultoriodental.isoftuthh.com', 'https://backendproyectobina2.onrender.com']
-    : 'http://localhost:3000',
-  credentials: true,
+  origin: ['https://consultoriodental.isoftuthh.com'],
+  credentials: true,  // Esto permite enviar cookies con las solicitudes
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
+
 
 // Asegurar que el preflight de OPTIONS esté habilitado
 app.options('*', cors(corsOptions));
