@@ -303,7 +303,9 @@ const login = async (req, res) => {
       secure: process.env.NODE_ENV === 'production', // Solo en producción para HTTPS
       sameSite: 'None', // Cambia a 'None' si tienes problemas con otros dominios
       maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
-      path: '/'
+      path: '/',
+      domain: 'consultoriodental.isoftuthh.com', // Opción para definir dominio si es necesario
+
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
