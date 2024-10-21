@@ -7,7 +7,7 @@ const router = express.Router();
 // Configuración de Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // Limitar cada IP a 100 solicitudes por ventana de tiempo
+  max: 100, // Limitar cada IP a 100 solicitudes por ventana de tiempo
   message: { message: 'Demasiadas solicitudes, por favor intenta de nuevo más tarde.' },
   statusCode: 429, // Código de estado 429 (Too Many Requests)
 

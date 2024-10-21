@@ -44,19 +44,22 @@ const updateVerificationCodeAndExpiration = (correo, nuevoCodigo, nuevaExpiracio
   db.query(query, [nuevoCodigo, nuevaExpiracion, correo], callback);
 };
 
-// Función para incrementar los intentos fallidos
 const incrementarIntentosFallidos = (correo, callback) => {
   const query = 'UPDATE usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE correo = ?';
   db.query(query, [correo], callback);
 };
 
-// Función para bloquear la cuenta después de demasiados intentos fallidos
 const bloquearCuenta = (correo, callback) => {
-  const query = 'UPDATE usuarios SET cuenta_bloqueada = TRUE WHERE correo = ?';
+  const tiempoBloqueo = new Date(Date.now() + 1 * 60 * 1000); // 5 minutos en milisegundos
+  const query = 'UPDATE usuarios SET cuenta_bloqueada = TRUE, tiempo_bloqueo = ? WHERE correo = ?';
+  db.query(query, [tiempoBloqueo, correo], callback);
+};
+
+const desbloquearCuenta = (correo, callback) => {
+  const query = 'UPDATE usuarios SET cuenta_bloqueada = FALSE, intentos_fallidos = 0, tiempo_bloqueo = NULL WHERE correo = ?';
   db.query(query, [correo], callback);
 };
 
-// Función para reiniciar los intentos fallidos después de un inicio de sesión exitoso
 const reiniciarIntentosFallidos = (correo, callback) => {
   const query = 'UPDATE usuarios SET intentos_fallidos = 0 WHERE correo = ?';
   db.query(query, [correo], callback);
@@ -121,4 +124,5 @@ module.exports = {
   updatePasswordByEmail,
   findUserByResetToken,
   savePasswordResetToken,
+  desbloquearCuenta,
 };

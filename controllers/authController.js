@@ -267,8 +267,8 @@ const generarTokenSesion = (usuario, mfaVerificado = false) => {
     { expiresIn: '15d' } // El token expira en 15 días
   );
 };  
+const DURACION_BLOQUEO_MINUTOS = 5;  // Tiempo de bloqueo en minutos
 
-// Login de usuarios
 const login = async (req, res) => {
   const { correo, password } = req.body;
 
@@ -280,36 +280,62 @@ const login = async (req, res) => {
 
     // Verificar si la cuenta está bloqueada
     if (usuario.cuenta_bloqueada) {
-      return res.status(403).json({ message: 'Cuenta bloqueada debido a demasiados intentos fallidos.' });
+      const tiempoBloqueoFinalizado = new Date(usuario.tiempo_bloqueo);
+      tiempoBloqueoFinalizado.setMinutes(tiempoBloqueoFinalizado.getMinutes());
+    
+      const tiempoActual = new Date();
+      const tiempoRestanteMs = tiempoBloqueoFinalizado - tiempoActual;
+    
+      if (tiempoRestanteMs > 0) {
+        const tiempoRestanteSegundos = Math.floor(tiempoRestanteMs / 1000);
+        return res.status(403).json({ 
+          message: 'Cuenta bloqueada temporalmente. Intenta de nuevo más tarde.', 
+          tiempoRestante: tiempoRestanteSegundos // Tiempo restante en segundos 
+        });
+      } else {
+        // Si el tiempo de bloqueo ha pasado, desbloquear la cuenta y reiniciar los intentos fallidos
+        await userModel.desbloquearCuenta(correo);
+      }
     }
 
     // Verificar la contraseña
     const validPassword = await bcrypt.compare(password, usuario.password);
     if (!validPassword) {
+      // Incrementar el número de intentos fallidos
+      await userModel.incrementarIntentosFallidos(correo);
+
+      if (usuario.intentos_fallidos + 1 >= usuario.max_intentos_fallidos) {
+        // Bloquear la cuenta si se excede el número máximo de intentos
+        await userModel.bloquearCuenta(correo);
+        return res.status(403).json({ message: 'Demasiados intentos fallidos. Cuenta bloqueada.' });
+      }
+
       return res.status(400).json({ message: 'Contraseña incorrecta.' });
     }
 
+    // Si la contraseña es correcta, reiniciar los intentos fallidos
+    await userModel.reiniciarIntentosFallidos(correo);
+
     // Si el usuario tiene MFA habilitado
     if (usuario.mfa_secret && !usuario.mfaVerificado) {
-      return res.json({ requireMfa: true }); // Indicar que se requiere MFA
+      return res.json({ requireMfa: true });
     }
 
-    // Si ya pasó el MFA o no tiene MFA habilitado, generamos un token con mfaVerificado = true
     const token = generarTokenSesion(usuario, true);
 
-    // Establecer la cookie de sesión
     res.cookie('sessionToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Solo en producción para HTTPS
-      sameSite: 'None', // Cambia a 'None' si tienes problemas con otros dominios
-      maxAge: 1000 * 60 * 60 * 24 * 15, // 15 días de expiración
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'None',
+      maxAge: 1000 * 60 * 60 * 24 * 15,
       path: '/',
-
     });
 
     return res.json({ message: 'Inicio de sesión exitoso', token });
   });
 };
+
+
 // Función para cerrar sesión y eliminar la cookie en producción
 const logout = (req, res) => {
   res.cookie('sessionToken', '', { 
