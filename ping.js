@@ -13,4 +13,4 @@ function pingServer() {
 }
 
 // Hacer ping cada 5 minutos (300000 milisegundos)
-setInterval(pingServer, 300000);
+setInterval(pingServer, 300);
