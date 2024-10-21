@@ -34,7 +34,14 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 // Configuración de CSRF usando cookies
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,  // La cookie no es accesible desde JavaScript del lado del cliente
+    secure: process.env.NODE_ENV === 'production',  // Solo enviar la cookie si estás en producción y usando HTTPS
+    sameSite: 'None',  // Permitir el uso de cookies cross-site (entre sitios)
+    path: '/',  // Asegúrate de que la cookie esté disponible en todas las rutas
+  }
+});
 app.use(csrfProtection);  // Aplicar la protección CSRF en toda la app
 
 // Ruta para obtener el token CSRF
