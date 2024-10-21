@@ -39,7 +39,7 @@ app.use(csrfProtection);  // Aplicar la protección CSRF en toda la app
 
 // Ruta para obtener el token CSRF
 app.get('/api/get-csrf-token', (req, res) => {
-  res.cookie('XSRF-TOKEN', req.csrfToken(), { httpOnly: true, secure: true, sameSite: 'None' });
+  res.cookie('XSRF-TOKEN', req.csrfToken(), { httpOnly: true, secure: true, sameSite: 'None', });
   res.json({ csrfToken: req.csrfToken() });
 });
 
