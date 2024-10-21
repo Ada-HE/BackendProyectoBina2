@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 
+
 const app = express();
 
 // Logs para verificar variables de entorno
@@ -67,3 +68,4 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+require('./ping');
