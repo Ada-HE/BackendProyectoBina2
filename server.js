@@ -3,6 +3,7 @@ const cors = require('cors');
 const xss = require('xss-clean');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf'); // Importar csurf
+const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 
