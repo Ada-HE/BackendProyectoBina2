@@ -12,5 +12,5 @@ function pingServer() {
   });
 }
 
-// Hacer ping cada 3 minutos (180000 milisegundos)
-setInterval(pingServer, 180000);
+// Hacer ping cada 1 minuto (60,000 milisegundos)
+setInterval(pingServer, 10000);  // Enviar ping cada 1 minuto
