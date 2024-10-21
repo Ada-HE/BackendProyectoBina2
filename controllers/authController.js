@@ -366,7 +366,7 @@ const verificarAutenticacion = (req, res) => {
 };
 // Función para enviar el correo con el enlace de recuperación
 const enviarCorreoRecuperacion = async (correo, token) => {
-  const link = `http://localhost:3000/reset-password/${token}`;
+  const link = `https://consultoriodental.isoftuthh.com/reset-password/${token}`;
   const mailOptions = {
     from: '20221030@uthh.edu.mx',
     to: correo,
