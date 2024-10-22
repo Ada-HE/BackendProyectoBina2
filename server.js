@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const authRoutesPoliticas = require('./routes/privacyPolicyRoutes')
+const authDeslindeLegal = require('./routes/deslindeLegalRoutes')
 
 
 const app = express();
@@ -56,6 +57,8 @@ app.get('/api/get-csrf-token', (req, res) => {
 app.use('/api', authRoutes);
 
 app.use('/api', authRoutesPoliticas);
+app.use('/api', authDeslindeLegal);
+
 
 // Middleware para manejar errores globales
 app.use((err, req, res, next) => {
