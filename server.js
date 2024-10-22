@@ -10,6 +10,9 @@ const authRoutesPoliticas = require('./routes/privacyPolicyRoutes');
 const authDeslindeLegal = require('./routes/deslindeLegalRoutes');
 const authTyC = require('./routes/termsConditionsRoutes');
 const authRedesSociales = require('./routes/socialMediaRoutes')
+const authEslogan = require('./routes/esloganRoutes')
+
+
 
 
 const app = express();
@@ -62,6 +65,7 @@ app.use('/api', authRoutesPoliticas);
 app.use('/api', authDeslindeLegal);
 app.use('/api', authTyC);
 app.use('/api', authRedesSociales);
+app.use('/api', authEslogan);
 
 // Middleware para manejar errores globales
 app.use((err, req, res, next) => {
