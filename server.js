@@ -8,6 +8,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const authRoutesPoliticas = require('./routes/privacyPolicyRoutes')
 const authDeslindeLegal = require('./routes/deslindeLegalRoutes')
+const authTyC = require('./routes/termsConditionsRoutes')
 
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api', authRoutes);
 
 app.use('/api', authRoutesPoliticas);
 app.use('/api', authDeslindeLegal);
+app.use('/api', authTyC);
 
 
 // Middleware para manejar errores globales
