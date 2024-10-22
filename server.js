@@ -6,6 +6,7 @@ const csrf = require('csurf'); // Importar csurf
 const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
+const authRoutesPoliticas = require('./routes/privacyPolicyRoutes')
 
 
 const app = express();
@@ -54,6 +55,8 @@ app.get('/api/get-csrf-token', (req, res) => {
 // Usar las rutas de autenticación
 app.use('/api', authRoutes);
 
+app.use('/api', authRoutesPoliticas);
+
 // Middleware para manejar errores globales
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {  // Manejar errores de CSRF
@@ -68,4 +71,4 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
-require('./ping');
+//require('./ping');
