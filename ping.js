@@ -1,4 +1,4 @@
-/*const https = require('https');
+const https = require('https');
 
 // URL de tu servidor en Render
 const url = 'https://localhost:4000';
@@ -13,4 +13,4 @@ function pingServer() {
 }
 
 // Hacer ping cada 1 minuto (60,000 milisegundos)
-setInterval(pingServer, 10000);  // Enviar ping cada 1 minuto*/
+setInterval(pingServer, 10000);  // Enviar ping cada 1 minuto
