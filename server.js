@@ -6,9 +6,10 @@ const csrf = require('csurf'); // Importar csurf
 const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
-const authRoutesPoliticas = require('./routes/privacyPolicyRoutes')
-const authDeslindeLegal = require('./routes/deslindeLegalRoutes')
-const authTyC = require('./routes/termsConditionsRoutes')
+const authRoutesPoliticas = require('./routes/privacyPolicyRoutes');
+const authDeslindeLegal = require('./routes/deslindeLegalRoutes');
+const authTyC = require('./routes/termsConditionsRoutes');
+const authRedesSociales = require('./routes/socialMediaRoutes')
 
 
 const app = express();
@@ -60,7 +61,7 @@ app.use('/api', authRoutes);
 app.use('/api', authRoutesPoliticas);
 app.use('/api', authDeslindeLegal);
 app.use('/api', authTyC);
-
+app.use('/api', authRedesSociales);
 
 // Middleware para manejar errores globales
 app.use((err, req, res, next) => {
