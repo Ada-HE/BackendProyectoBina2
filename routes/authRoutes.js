@@ -40,5 +40,9 @@ router.post('/solicitar-recuperacion', limiter, authController.solicitarRecupera
 
 // Ruta para cambiar la contraseña
 router.post('/cambiar-contrasena', limiter, authController.cambiarContrasena); // Cambiar la contraseña
+// Ruta para obtener el perfil del usuario logueado
+router.get('/perfil', authController.getUserProfile);
+router.post('/modificar-contrasena', authController.modificarContrasena);
+
 
 module.exports = router; // Exporta el router para usar en tu servidor principal

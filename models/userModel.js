@@ -110,6 +110,20 @@ const savePasswordResetToken = (correo, token, expiration, callback) => {
   `;
   db.query(query, [token, expiration, correo], callback);
 };
+// Función para buscar un usuario por su ID
+const findUserById = (id, callback) => {
+  const query = 'SELECT id, nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo FROM usuarios WHERE id = ?';
+  db.query(query, [id], callback);
+};
+// Función para actualizar la contraseña del usuario por ID
+const updatePasswordById = (id, newPassword, callback) => {
+  const query = 'UPDATE usuarios SET password = ? WHERE id = ?';
+  db.query(query, [newPassword, id], callback);
+};
+const findUserPasswordById = (id, callback) => {
+  const query = 'SELECT id, password FROM usuarios WHERE id = ?';
+  db.query(query, [id], callback);
+};
 module.exports = {
   createUser,
   findUserByEmail,
@@ -125,4 +139,7 @@ module.exports = {
   findUserByResetToken,
   savePasswordResetToken,
   desbloquearCuenta,
+  findUserById,
+  updatePasswordById,
+  findUserPasswordById,
 };

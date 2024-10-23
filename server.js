@@ -12,6 +12,7 @@ const authTyC = require('./routes/termsConditionsRoutes');
 const authRedesSociales = require('./routes/socialMediaRoutes')
 const authEslogan = require('./routes/esloganRoutes')
 const authLogoNombre = require('./routes/logoNombreRoutes')
+const authContacto = require('./routes/contactoRoutes')
 
 
 
@@ -69,6 +70,9 @@ app.use('/api', authTyC);
 app.use('/api', authRedesSociales);
 app.use('/api', authEslogan);
 app.use('/api', authLogoNombre);
+app.use('/api', authContacto);
+
+
 
 
 // Middleware para manejar errores globales
@@ -85,4 +89,4 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
-require('./ping');
+//require('./ping');

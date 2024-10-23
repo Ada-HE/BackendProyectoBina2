@@ -455,6 +455,109 @@ const cambiarContrasena = async (req, res) => {
   }
 };
 
+// Función para obtener los datos del perfil del usuario logueado
+const getUserProfile = (req, res) => {
+  const token = req.cookies.sessionToken; // Leer el token de las cookies
+  if (!token) {
+    return res.status(401).json({ message: 'No estás autenticado' });
+  }
+
+  // Verificar el token
+  jwt.verify(token, 'secreto_super_seguro', (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token inválido o expirado' });
+    }
+
+    // Buscar al usuario por su ID
+    userModel.findUserById(decoded.id, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al obtener la información del usuario' });
+      }
+      if (result.length === 0) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      const usuario = result[0];
+
+      // Devolver solo los datos importantes
+      return res.json({
+        id: usuario.id,  // Aquí se incluye el ID del usuario
+        nombre: usuario.nombre,
+        apellidoPaterno: usuario.apellidoPaterno,
+        apellidoMaterno: usuario.apellidoMaterno,
+        telefono: usuario.telefono,
+        correo: usuario.correo,
+        edad: usuario.edad,
+        sexo: usuario.sexo,
+      });
+    });
+  });
+};
+
+
+// Controlador para cambiar la contraseña
+const modificarContrasena = async (req, res) => {
+  const { id, currentPassword, newPassword, confirmPassword } = req.body;
+
+  // Verificar si todos los campos están presentes
+  if (!id || !currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+  }
+
+  try {
+    // Verificar si las contraseñas nuevas coinciden
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Las contraseñas no coinciden.' });
+    }
+
+    // Validar la nueva contraseña (al menos una mayúscula, un número, un signo y 8 caracteres)
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ 
+        message: 'La nueva contraseña debe contener al menos una letra mayúscula, un número, un signo especial y ser de mínimo 8 caracteres.' 
+      });
+    }
+
+    // Buscar al usuario por su ID
+    userModel.findUserPasswordById(id, async (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error al buscar el usuario en la base de datos.' });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: 'Usuario no encontrado.' });
+      }
+
+      const usuario = result[0];
+
+      // Verificar que el campo de contraseña no sea undefined o null
+      if (!usuario.password) {
+        return res.status(500).json({ message: 'No se encontró la contraseña del usuario en la base de datos.' });
+      }
+
+      // Verificar la contraseña actual
+      const isMatch = await bcrypt.compare(currentPassword, usuario.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
+      }
+
+      // Encriptar la nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Actualizar la contraseña en la base de datos
+      userModel.updatePasswordById(id, hashedPassword, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error al actualizar la contraseña.' });
+        }
+
+        return res.json({ message: 'Contraseña actualizada exitosamente.' });
+      });
+    });
+  } catch (error) {
+    console.error('Error en el servidor:', error);
+    return res.status(500).json({ message: 'Error en el servidor.' });
+  }
+};
 
 
 module.exports = {
@@ -468,4 +571,6 @@ module.exports = {
   verificarAutenticacion,
   solicitarRecuperacion,
   cambiarContrasena,
+  getUserProfile,
+  modificarContrasena,
 };
