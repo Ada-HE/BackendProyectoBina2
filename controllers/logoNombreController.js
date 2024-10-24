@@ -17,7 +17,7 @@ exports.registrarLogoNombre = (req, res) => {
   }
 
   const nombreOriginal = logo.originalname.replace(/\s+/g, '-'); // Reemplazar espacios con guiones
-  const rutaDestino = path.join(__dirname, '../../frontend/public', nombreOriginal);
+  const rutaDestino = path.join(__dirname, '../../consultoriodental', nombreOriginal);
 
   // Verificar si ya existe un archivo con el mismo nombre
   if (fs.existsSync(rutaDestino)) {
