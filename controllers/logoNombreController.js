@@ -1,55 +1,33 @@
-const logoNombreModel = require('../models/logoNombreModel');
-const path = require('path');
-const fs = require('fs');
+const { registrarLogoNombre, actualizarLogoNombre, obtenerLogoNombre } = require('../models/logoNombreModel');
 
-// Registrar nombre y logo
 exports.registrarLogoNombre = (req, res) => {
   const { nombre } = req.body;
-  const logo = req.file;
+  const logoUrl = req.file ? req.file.path : null;
 
-  if (!logo) {
-    return res.status(400).json({ error: 'El logo es obligatorio.' });
+
+
+  if (!nombre || !logoUrl) {
+    return res.status(400).json({ error: 'El nombre y el logo son requeridos.' });
   }
 
-  const extensionValida = ['image/jpeg', 'image/png'].includes(logo.mimetype);
-  if (!extensionValida) {
-    return res.status(400).json({ error: 'El logo debe ser en formato JPEG o PNG.' });
-  }
-
-  const nombreOriginal = logo.originalname.replace(/\s+/g, '-'); // Reemplazar espacios con guiones
-  const rutaDestino = path.join(__dirname, '../../frontend/public', nombreOriginal);
-
-  // Verificar si ya existe un archivo con el mismo nombre
-  if (fs.existsSync(rutaDestino)) {
-    return res.status(400).json({ error: 'Ya existe un archivo con el mismo nombre. Elige otro logo o cambia el nombre del archivo.' });
-  }
-
-  // Mover el archivo a la carpeta 'public'
-  fs.rename(logo.path, rutaDestino, (err) => {
+  registrarLogoNombre(nombre, logoUrl, (err, result) => {
     if (err) {
-      console.error('Error al mover el archivo:', err);
-      return res.status(500).json({ error: 'Error al guardar el logo.' });
+      console.error('Error al registrar en la base de datos:', err);
+      return res.status(500).json({ error: 'Error al registrar o actualizar el nombre y logo.' });
     }
-
-    // Guardar el nombre de la empresa y el logo en la base de datos
-    logoNombreModel.registrarLogoNombre(nombre, nombreOriginal, (err) => {
-      if (err) {
-        console.error('Error al registrar nombre y logo:', err);
-        return res.status(500).json({ error: 'Error al registrar nombre y logo en la base de datos.' });
-      }
-      // Devolver el nombre del logo para que se pueda usar en el frontend
-      res.status(201).json({ message: 'Nombre y logo registrados con éxito.', logoName: nombreOriginal });
-    });
+    res.json({ message: 'Registro o actualización realizada con éxito', logoUrl });
   });
 };
-// Controlador para obtener todos los registros de la tabla
+
+
+// Controlador para obtener el nombre y logo actuales
 exports.obtenerLogoNombre = (req, res) => {
-  logoNombreModel.obtenerLogoNombre((err, resultados) => {
+  obtenerLogoNombre((err, result) => {
     if (err) {
-      console.error('Error al obtener los registros:', err);
-      return res.status(500).json({ error: 'Error al obtener los registros de la base de datos.' });
+      console.error('Error al obtener los datos del logo y nombre:', err);
+      return res.status(500).json({ error: 'Error al obtener los datos del logo y nombre.' });
     }
-    res.status(200).json(resultados);
+    return res.json(result);
   });
 };
 
@@ -58,40 +36,32 @@ exports.actualizarLogoNombre = (req, res) => {
   const logoUrl = req.file ? req.file.path : null; // Solo cambia si hay un archivo nuevo
   const { id } = req.params;
 
-  if (logo) {
-    const extensionValida = ['image/jpeg', 'image/png'].includes(logo.mimetype);
-    if (!extensionValida) {
-      return res.status(400).json({ error: 'El logo debe ser en formato JPEG o PNG.' });
+  if (!id) {
+    return res.status(400).json({ error: 'Falta el ID del registro para actualizar.' });
+  }
+
+  // Obtener los valores actuales para no sobreescribirlos si no se envían nuevos
+  obtenerLogoNombre((err, resultado) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error al obtener los datos actuales.' });
     }
 
-    const nombreOriginal = logo.originalname.replace(/\s+/g, '-'); // Reemplazar espacios con guiones
-    const rutaDestino = path.join(__dirname, '../../frontend/public', nombreOriginal);
+    const registroActual = resultado[0];
 
-    // Si el archivo ya existe, lo reemplaza
-    fs.rename(logo.path, rutaDestino, (err) => {
-      if (err) {
-        console.error('Error al mover el archivo:', err);
-        return res.status(500).json({ error: 'Error al guardar el logo.' });
-      }
+    // Si no se envía un nuevo nombre, usar el nombre actual
+    const nombreActualizado = nombre || registroActual.nombre;
 
-      // Actualizar el nombre y el logo en la base de datos
-      logoNombreModel.actualizarLogoNombre(id, nombre, nombreOriginal, (err) => {
-        if (err) {
-          console.error('Error al actualizar nombre y logo:', err);
-          return res.status(500).json({ error: 'Error al actualizar nombre y logo en la base de datos.' });
-        }
-        res.status(200).json({ message: 'Nombre y logo actualizados con éxito.' });
-      });
-    });
-  } else {
-    // Si no hay logo, solo actualizar el nombre
-    logoNombreModel.actualizarLogoNombre(id, nombre, null, (err) => {
+    // Si no se envía un nuevo logo, usar el logo actual
+    const logoActualizado = logoUrl || registroActual.logo;
+
+    // Actualizar el registro con los valores proporcionados
+    actualizarLogoNombre(id, nombreActualizado, logoActualizado, (err, result) => {
       if (err) {
-        console.error('Error al actualizar nombre:', err);
-        return res.status(500).json({ error: 'Error al actualizar el nombre en la base de datos.' });
+        console.error('Error al actualizar en la base de datos:', err);
+        return res.status(500).json({ error: 'Error al actualizar el nombre y logo.' });
       }
-      res.status(200).json({ message: 'Nombre actualizado con éxito.' });
+      res.json({ message: 'Actualización realizada con éxito', logoUrl: logoActualizado });
     });
-  }
+  });
 };
 

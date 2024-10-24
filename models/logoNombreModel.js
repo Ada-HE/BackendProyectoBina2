@@ -1,38 +1,55 @@
 const db = require('../db');
 
-// Registrar o actualizar el nombre y logo
-const registrarLogoNombre = (nombre, logoNombre, callback) => {
+const registrarLogoNombre = (nombre, logoUrl, callback) => {
   const query = `
     INSERT INTO logoNombre (nombre, logo)
     VALUES (?, ?)
     ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), logo = VALUES(logo)
   `;
-  db.query(query, [nombre, logoNombre], callback);
+
+  db.query(query, [nombre, logoUrl], (err, result) => {
+    if (err) {
+      console.error('Error al registrar o actualizar en la base de datos:', err);
+      return callback(err, null);
+    }
+    console.log('Inserción exitosa en la base de datos.');
+    callback(null, result);
+  });
 };
-// Obtener todos los registros de la tabla logoNombre
+
+
+// Función para obtener el registro actual de nombre y logo
 const obtenerLogoNombre = (callback) => {
-  const query = 'SELECT id, nombre, logo, fecha_creacion FROM logoNombre';
-  db.query(query, callback);
+  const query = `SELECT * FROM logoNombre LIMIT 1`;
+  
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error('Error al obtener el nombre y logo:', err);
+      return callback(err, null);
+    }
+    callback(null, result);
+  });
 };
 
-// Actualizar nombre y logo
-const actualizarLogoNombre = (id, nombre, logoNombre, callback) => {
-  let query;
-  const params = [nombre, id];
-
-  if (logoNombre) {
-    query = 'UPDATE logoNombre SET nombre = ?, logo = ? WHERE id = ?';
-    params.splice(1, 0, logoNombre); // Inserta el logoNombre en la segunda posición
-  } else {
-    query = 'UPDATE logoNombre SET nombre = ? WHERE id = ?';
-  }
-
-  db.query(query, params, callback);
+// Función para actualizar el nombre y logo por ID
+const actualizarLogoNombre = (id, nombre, logoUrl, callback) => {
+  const query = `
+    UPDATE logoNombre 
+    SET nombre = ?, logo = ?
+    WHERE id = ?
+  `;
+  
+  db.query(query, [nombre, logoUrl, id], (err, result) => {
+    if (err) {
+      console.error('Error al actualizar el nombre y logo:', err);
+      return callback(err, null);
+    }
+    callback(null, result);
+  });
 };
-
 
 module.exports = {
   registrarLogoNombre,
   obtenerLogoNombre,
-  actualizarLogoNombre
+  actualizarLogoNombre,
 };
