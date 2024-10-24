@@ -17,14 +17,14 @@ exports.registrarLogoNombre = (req, res) => {
   }
 
   const nombreOriginal = logo.originalname.replace(/\s+/g, '-'); // Reemplazar espacios con guiones
-  const rutaDestino = path.join(__dirname, '../../consultoriodental', nombreOriginal);
+  const rutaDestino = path.join(__dirname, '../../frontend/public', nombreOriginal);
 
   // Verificar si ya existe un archivo con el mismo nombre
   if (fs.existsSync(rutaDestino)) {
     return res.status(400).json({ error: 'Ya existe un archivo con el mismo nombre. Elige otro logo o cambia el nombre del archivo.' });
   }
 
-  // Mover el archivo a la carpeta 'consultoriodental/public'
+  // Mover el archivo a la carpeta 'public'
   fs.rename(logo.path, rutaDestino, (err) => {
     if (err) {
       console.error('Error al mover el archivo:', err);
@@ -42,7 +42,6 @@ exports.registrarLogoNombre = (req, res) => {
     });
   });
 };
-
 // Controlador para obtener todos los registros de la tabla
 exports.obtenerLogoNombre = (req, res) => {
   logoNombreModel.obtenerLogoNombre((err, resultados) => {
@@ -54,7 +53,6 @@ exports.obtenerLogoNombre = (req, res) => {
   });
 };
 
-// Actualizar nombre y logo
 exports.actualizarLogoNombre = (req, res) => {
   const { nombre } = req.body;
   const logo = req.file;
@@ -67,7 +65,7 @@ exports.actualizarLogoNombre = (req, res) => {
     }
 
     const nombreOriginal = logo.originalname.replace(/\s+/g, '-'); // Reemplazar espacios con guiones
-    const rutaDestino = path.join(__dirname, '../../consultoriodental', nombreOriginal);
+    const rutaDestino = path.join(__dirname, '../../frontend/public', nombreOriginal);
 
     // Si el archivo ya existe, lo reemplaza
     fs.rename(logo.path, rutaDestino, (err) => {
@@ -96,3 +94,5 @@ exports.actualizarLogoNombre = (req, res) => {
     });
   }
 };
+
+
