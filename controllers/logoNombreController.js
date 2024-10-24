@@ -33,7 +33,7 @@ exports.obtenerLogoNombre = (req, res) => {
 
 exports.actualizarLogoNombre = (req, res) => {
   const { nombre } = req.body;
-  const logoUrl = req.file ? req.file.path : null; // Solo cambia si hay un archivo nuevo
+  const logoUrl = req.file ? req.file.path : null; // Si hay archivo nuevo, se usa la URL de Cloudinary
   const { id } = req.params;
 
   if (!id) {
@@ -64,4 +64,3 @@ exports.actualizarLogoNombre = (req, res) => {
     });
   });
 };
-
