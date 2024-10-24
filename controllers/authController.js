@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
 // Función para enviar el correo con el código de verificación
 const enviarCorreoVerificacion = async (correo, codigoVerificacion) => {
   const mailOptions = {
-    from: 'consultorio@tudominio.com',
+    from: '20221030@uthh.edu.mx',
     to: correo,
     subject: 'Código de Verificación - Consultorio Dental',
     html: `
@@ -397,7 +397,7 @@ const verificarAutenticacion = (req, res) => {
 const enviarCorreoRecuperacion = async (correo, token) => {
   const link = `https://consultoriodental.isoftuthh.com/reset-password/${token}`;
 const mailOptions = {
-  from: 'consultorio@tudominio.com',
+  from: '20221030@uthh.edu.mx',
   to: correo,
   subject: 'Restablecimiento de Contraseña - Consultorio Dental',
   html: `
