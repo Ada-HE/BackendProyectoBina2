@@ -55,7 +55,7 @@ exports.obtenerLogoNombre = (req, res) => {
 
 exports.actualizarLogoNombre = (req, res) => {
   const { nombre } = req.body;
-  const logo = req.file;
+  const logoUrl = req.file ? req.file.path : null; // Solo cambia si hay un archivo nuevo
   const { id } = req.params;
 
   if (logo) {
@@ -94,5 +94,4 @@ exports.actualizarLogoNombre = (req, res) => {
     });
   }
 };
-
 
