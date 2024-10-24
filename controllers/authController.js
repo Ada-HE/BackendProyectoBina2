@@ -21,11 +21,36 @@ const transporter = nodemailer.createTransport({
 // Función para enviar el correo con el código de verificación
 const enviarCorreoVerificacion = async (correo, codigoVerificacion) => {
   const mailOptions = {
-    from: '20221030@uthh.edu.mx',
+    from: 'consultorio@tudominio.com',
     to: correo,
-    subject: 'Código de Verificación',
-    text: `Tu código de verificación es: ${codigoVerificacion}`,
+    subject: 'Código de Verificación - Consultorio Dental',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; border-radius: 10px;">
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+          <h2 style="color: #01349c; text-align: center;">¡Bienvenido a Consultorio Dental!</h2>
+          <p style="font-size: 16px; color: #333333;">Hola,</p>
+          <p style="font-size: 16px; color: #333333;">
+            Gracias por elegirnos para tu cuidado dental. Para continuar con el proceso de verificación de tu cuenta, por favor utiliza el siguiente código:
+          </p>
+          <div style="text-align: center; margin: 20px 0;">
+            <span style="display: inline-block; padding: 10px 20px; background-color: #01349c; color: #ffffff; font-size: 18px; font-weight: bold; border-radius: 5px;">
+              ${codigoVerificacion}
+            </span>
+          </div>
+          <p style="font-size: 16px; color: #333333;">
+            Si no solicitaste este código, puedes ignorar este mensaje.
+          </p>
+          <p style="font-size: 16px; color: #333333;">¡Nos vemos pronto!</p>
+        </div>
+        <div style="text-align: center; margin-top: 20px; font-size: 14px; color: #999999;">
+          <p>Consultorio Dental</p>
+          <p>Dirección: Calle Principal #123, Ciudad</p>
+          <p>Teléfono: (123) 456-7890</p>
+        </div>
+      </div>
+    `,
   };
+  
 
   try {
     await transporter.sendMail(mailOptions);
@@ -371,12 +396,34 @@ const verificarAutenticacion = (req, res) => {
 // Función para enviar el correo con el enlace de recuperación
 const enviarCorreoRecuperacion = async (correo, token) => {
   const link = `https://consultoriodental.isoftuthh.com/reset-password/${token}`;
-  const mailOptions = {
-    from: '20221030@uthh.edu.mx',
-    to: correo,
-    subject: 'Restablecimiento de contraseña',
-    text: `Haz clic en el siguiente enlace para restablecer tu contraseña: ${link}`,
-  };
+const mailOptions = {
+  from: 'consultorio@tudominio.com',
+  to: correo,
+  subject: 'Restablecimiento de Contraseña - Consultorio Dental',
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; border-radius: 10px;">
+      <div style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #01349c; text-align: center;">Restablecimiento de Contraseña</h2>
+        <p style="font-size: 16px; color: #333333;">Hola,</p>
+        <p style="font-size: 16px; color: #333333;">
+          Recibimos una solicitud para restablecer la contraseña de tu cuenta en nuestro consultorio dental. Para continuar con el proceso, por favor haz clic en el siguiente enlace:
+        </p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${link}" style="display: inline-block; padding: 10px 20px; background-color: #01349c; color: #ffffff; font-size: 18px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
+        </div>
+        <p style="font-size: 16px; color: #333333;">
+          Si no solicitaste este restablecimiento, puedes ignorar este mensaje. El enlace expirará en 60 minutos.
+        </p>
+        <p style="font-size: 16px; color: #333333;">¡Nos vemos pronto!</p>
+      </div>
+      <div style="text-align: center; margin-top: 20px; font-size: 14px; color: #999999;">
+        <p>Consultorio Dental</p>
+        <p>Dirección: Calle Principal #123, Ciudad</p>
+        <p>Teléfono: (123) 456-7890</p>
+      </div>
+    </div>
+  `,
+};
 
   try {
     await transporter.sendMail(mailOptions);
