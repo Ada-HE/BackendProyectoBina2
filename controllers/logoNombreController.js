@@ -65,7 +65,7 @@ exports.actualizarLogoNombre = (req, res) => {
     }
 
     const nombreOriginal = logo.originalname.replace(/\s+/g, '-'); // Reemplazar espacios con guiones
-    const rutaDestino = path.join(__dirname, '../../frontend/public', nombreOriginal);
+    const rutaDestino = path.join(__dirname, '../../consultoriodental', nombreOriginal);
 
     // Si el archivo ya existe, lo reemplaza
     fs.rename(logo.path, rutaDestino, (err) => {
