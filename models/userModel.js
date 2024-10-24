@@ -9,7 +9,14 @@ const createUser = (nombre, apellidoPaterno, apellidoMaterno, telefono, edad, se
   `;
   db.query(query, [nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo, password, tipo, codigoVerificacion, expirationTime, mfaSecret], callback);
 };
-
+// Función para registrar una incidencia
+const registrarIncidencia = (usuarioId, correo, tipoIncidente, descripcion, callback) => {
+  const query = `
+    INSERT INTO incidencias (usuario_id, correo, tipo_incidente, descripcion) 
+    VALUES (?, ?, ?, ?)
+  `;
+  db.query(query, [usuarioId, correo, tipoIncidente, descripcion], callback);
+};
 // Función para buscar un usuario por correo
 const findUserByEmail = (correo, callback) => {
   const query = 'SELECT * FROM usuarios WHERE correo = ?';
@@ -124,6 +131,40 @@ const findUserPasswordById = (id, callback) => {
   const query = 'SELECT id, password FROM usuarios WHERE id = ?';
   db.query(query, [id], callback);
 };
+const getIncidencias = (callback) => {
+  const query = 'SELECT * FROM incidencias';
+  db.query(query, (err, results) => {
+    if (err) {
+      return callback(err, null); // Devolver el error al callback
+    }
+    callback(null, results); // Devolver los resultados al callback
+  });
+};
+const updateMaxIntentosFallidos = (nuevoMaxIntentos, callback) => {
+  const query = 'UPDATE usuarios SET max_intentos_fallidos = ?';
+  
+
+  db.query(query, [nuevoMaxIntentos], (err, result) => {
+      if (err) {
+          console.error('Error en la ejecución de la consulta SQL:', err);
+          return callback(err);
+      }
+
+      callback(null, result);
+  });
+};
+// Función para obtener el valor actual de los intentos fallidos
+const obtenerMaxIntentos = (callback) => {
+  const query = 'SELECT max_intentos_fallidos FROM usuarios LIMIT 1';  // O ajustar según la estructura de tu base de datos
+  db.query(query, (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+    const maxIntentos = result[0].max_intentos_fallidos;
+    callback(null, maxIntentos);
+  });
+};
+
 module.exports = {
   createUser,
   findUserByEmail,
@@ -142,4 +183,8 @@ module.exports = {
   findUserById,
   updatePasswordById,
   findUserPasswordById,
+  registrarIncidencia,
+  getIncidencias,
+  updateMaxIntentosFallidos,
+  obtenerMaxIntentos
 };

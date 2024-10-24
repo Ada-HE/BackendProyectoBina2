@@ -44,5 +44,10 @@ router.post('/cambiar-contrasena', limiter, authController.cambiarContrasena); /
 router.get('/perfil', authController.getUserProfile);
 router.post('/modificar-contrasena', authController.modificarContrasena);
 
+// Ruta para obtener incidencias
+router.get('/incidencias', authController.getIncidencias); // Nueva ruta para obtener incidencias
+router.post('/cambiar-max-intentos', authController.cambiarMaxIntentosFallidos);
+// Ruta para obtener el valor actual de los intentos fallidos
+router.get('/obtener-max-intentos', authController.obtenerMaxIntentos);
 
 module.exports = router; // Exporta el router para usar en tu servidor principal

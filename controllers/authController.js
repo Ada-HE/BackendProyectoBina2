@@ -304,6 +304,10 @@ const login = async (req, res) => {
       // Incrementar el número de intentos fallidos
       await userModel.incrementarIntentosFallidos(correo);
 
+       // Registrar la incidencia de intento fallido
+       userModel.registrarIncidencia(usuario.id, correo, 'Intento fallido', 'Intento de acceso fallido con contraseña incorrecta', (err) => {
+        if (err) console.error('Error al registrar la incidencia:', err);
+      });
       if (usuario.intentos_fallidos + 1 >= usuario.max_intentos_fallidos) {
         // Bloquear la cuenta si se excede el número máximo de intentos
         await userModel.bloquearCuenta(correo);
@@ -558,7 +562,45 @@ const modificarContrasena = async (req, res) => {
     return res.status(500).json({ message: 'Error en el servidor.' });
   }
 };
+// Función para obtener las incidencias
 
+const getIncidencias = (req, res) => {
+  userModel.getIncidencias((err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results); // Aquí envías la respuesta con los resultados al cliente
+  });
+};
+const cambiarMaxIntentosFallidos = (req, res) => {
+
+  const { maxIntentos } = req.body;
+
+  // Validación
+  if (!maxIntentos || isNaN(maxIntentos)) {
+      return res.status(400).json({ message: 'Valor inválido para máximo de intentos' });
+  }
+
+
+  userModel.updateMaxIntentosFallidos(maxIntentos, (err, result) => {
+      if (err) {
+          console.error('Error al actualizar el máximo de intentos en la base de datos:', err);
+          return res.status(500).json({ message: 'Ocurrió un error en el servidor. Inténtalo de nuevo más tarde.' });
+      }
+
+      res.status(200).json({ message: 'Máximo de intentos actualizado correctamente' });
+  });
+};
+// Controlador para obtener el valor actual de los intentos fallidos
+const obtenerMaxIntentos = (req, res) => {
+  userModel.obtenerMaxIntentos((err, maxIntentos) => {
+    if (err) {
+      console.error('Error al obtener el máximo de intentos:', err);
+      return res.status(500).json({ message: 'Error al obtener el máximo de intentos fallidos' });
+    }
+    res.json({ maxIntentos });
+  });
+};
 
 module.exports = {
   register,
@@ -573,4 +615,7 @@ module.exports = {
   cambiarContrasena,
   getUserProfile,
   modificarContrasena,
+  getIncidencias,
+  cambiarMaxIntentosFallidos,
+  obtenerMaxIntentos
 };

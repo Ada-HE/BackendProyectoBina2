@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const xss = require('xss-clean');
+const errorHandler = require('./middleware/errorHandler'); // Importa el middleware de errores
+
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf'); // Importar csurf
 const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
@@ -14,16 +16,7 @@ const authEslogan = require('./routes/esloganRoutes')
 const authLogoNombre = require('./routes/logoNombreRoutes')
 const authContacto = require('./routes/contactoRoutes')
 
-
-
-
-
 const app = express();
-
-// Logs para verificar variables de entorno
-console.log('Entorno actual:', process.env.NODE_ENV);
-console.log('Puerto definido:', process.env.PORT);
-
 // Middleware para parsear JSON y cookies
 app.use(express.json());
 app.use(cookieParser());
@@ -61,9 +54,10 @@ app.get('/api/get-csrf-token', (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
+
+
 // Usar las rutas de autenticación
 app.use('/api', authRoutes);
-
 app.use('/api', authRoutesPoliticas);
 app.use('/api', authDeslindeLegal);
 app.use('/api', authTyC);
@@ -74,7 +68,8 @@ app.use('/api', authContacto);
 
 
 
-
+// Manejo de errores (debe ir después de todas las rutas)
+app.use(errorHandler);
 // Middleware para manejar errores globales
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {  // Manejar errores de CSRF

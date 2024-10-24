@@ -1,7 +1,7 @@
 /*const https = require('https');
 
 // URL de tu servidor en Render
-const url = 'http://localhost:4000';
+const url = 'https://backendproyectobina2.onrender.com';
 
 // Función para hacer una solicitud GET periódica
 function pingServer() {
