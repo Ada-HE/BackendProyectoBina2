@@ -50,7 +50,7 @@ const enviarCorreoVerificacion = async (correo, codigoVerificacion) => {
       </div>
     `,
   };
-  
+
 
   try {
     await transporter.sendMail(mailOptions);
@@ -158,8 +158,8 @@ const register = async (req, res) => {
         const expirationTime = new Date(Date.now() + 3 * 60 * 1000); // 3 minutos
 
         userModel.createUser(
-          nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo, 
-          hashedPassword, tipo || 'paciente', codigoVerificacion, expirationTime, mfaSecret, 
+          nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo,
+          hashedPassword, tipo || 'paciente', codigoVerificacion, expirationTime, mfaSecret,
           (err) => {
             if (err) {
               console.error('Error al crear el usuario:', err);
@@ -291,8 +291,8 @@ const generarTokenSesion = (usuario, mfaVerificado = false) => {
     'secreto_super_seguro', // Llave secreta
     { expiresIn: '15d' } // El token expira en 15 días
   );
-};  
-const DURACION_BLOQUEO_MINUTOS = 5;  // Tiempo de bloqueo en minutos
+};
+
 
 const login = async (req, res) => {
   const { correo, password } = req.body;
@@ -305,40 +305,61 @@ const login = async (req, res) => {
 
     // Verificar si la cuenta está bloqueada
     if (usuario.cuenta_bloqueada) {
-      const tiempoBloqueoFinalizado = new Date(usuario.tiempo_bloqueo);
-      tiempoBloqueoFinalizado.setMinutes(tiempoBloqueoFinalizado.getMinutes());
-    
-      const tiempoActual = new Date();
-      const tiempoRestanteMs = tiempoBloqueoFinalizado - tiempoActual;
-    
-      if (tiempoRestanteMs > 0) {
-        const tiempoRestanteSegundos = Math.floor(tiempoRestanteMs / 1000);
-        return res.status(403).json({ 
-          message: 'Cuenta bloqueada temporalmente. Intenta de nuevo más tarde.', 
-          tiempoRestante: tiempoRestanteSegundos // Tiempo restante en segundos 
-        });
-      } else {
-        // Si el tiempo de bloqueo ha pasado, desbloquear la cuenta y reiniciar los intentos fallidos
-        await userModel.desbloquearCuenta(correo);
+      // Si la cuenta está bloqueada indefinidamente
+      if (!usuario.intentos_fallidos && !usuario.tiempo_bloqueo) {
+        return res.status(403).json({ message: 'Cuenta bloqueada indefinidamente por el administrador.' });
+      }
+
+      // Si la cuenta está bloqueada temporalmente (por intentos fallidos)
+      if (usuario.tiempo_bloqueo) {
+        const tiempoBloqueoFinalizado = new Date(usuario.tiempo_bloqueo);
+        tiempoBloqueoFinalizado.setMinutes(tiempoBloqueoFinalizado.getMinutes());
+
+        const tiempoActual = new Date();
+        const tiempoRestanteMs = tiempoBloqueoFinalizado - tiempoActual;
+
+        if (tiempoRestanteMs > 0) {
+          const tiempoRestanteSegundos = Math.floor(tiempoRestanteMs / 1000);
+          return res.status(403).json({
+            message: 'Cuenta bloqueada temporalmente. Intenta de nuevo más tarde.',
+            tiempoRestante: tiempoRestanteSegundos
+          });
+        } else {
+          // Desbloquear automáticamente si ha pasado el tiempo de bloqueo
+          await userModel.desbloquearCuenta(correo);
+        }
       }
     }
 
-    // Verificar la contraseña
+    // Verificar la contraseña solo si la cuenta no está bloqueada
     const validPassword = await bcrypt.compare(password, usuario.password);
     if (!validPassword) {
-      // Incrementar el número de intentos fallidos
       await userModel.incrementarIntentosFallidos(correo);
-
-       // Registrar la incidencia de intento fallido
-       userModel.registrarIncidencia(usuario.id, correo, 'Intento fallido', 'Intento de acceso fallido con contraseña incorrecta', (err) => {
+      userModel.registrarIncidencia(usuario.id, correo, 'Intento fallido', 'Intento de acceso fallido con contraseña incorrecta', (err) => {
         if (err) console.error('Error al registrar la incidencia:', err);
       });
+
+      // Bloquear la cuenta si se excede el número de intentos fallidos 
       if (usuario.intentos_fallidos + 1 >= usuario.max_intentos_fallidos) {
-        // Bloquear la cuenta si se excede el número máximo de intentos
-        await userModel.bloquearCuenta(correo);
-        return res.status(403).json({ message: 'Demasiados intentos fallidos. Cuenta bloqueada.' });
+        try {
+          await userModel.bloquearCuenta(correo);
+
+          // Después de bloquear la cuenta, registrar el bloqueo en el historial
+          try {
+            await userModel.registrarBloqueoEnHistorial(usuario.id);
+          } catch (err) {
+            console.error('Error al registrar el bloqueo en el historial:', err);
+          }
+
+          // Enviar respuesta de cuenta bloqueada
+          return res.status(403).json({ message: 'Demasiados intentos fallidos. Cuenta bloqueada.' });
+
+        } catch (err) {
+          return res.status(500).json({ message: 'Error al bloquear la cuenta.' });
+        }
       }
 
+      // Si no se bloquea la cuenta, enviar mensaje de contraseña incorrecta
       return res.status(400).json({ message: 'Contraseña incorrecta.' });
     }
 
@@ -364,11 +385,10 @@ const login = async (req, res) => {
   });
 };
 
-
 // Función para cerrar sesión y eliminar la cookie en producción
 const logout = (req, res) => {
-  res.cookie('sessionToken', '', { 
-    httpOnly: true, 
+  res.cookie('sessionToken', '', {
+    httpOnly: true,
     secure: true, // Igual que cuando la cookie fue creada
     sameSite: 'None',  // Igual que cuando la cookie fue creada
     path: '/',  // Asegúrate de que el path sea el mismo que cuando se creó la cookie
@@ -396,11 +416,11 @@ const verificarAutenticacion = (req, res) => {
 // Función para enviar el correo con el enlace de recuperación
 const enviarCorreoRecuperacion = async (correo, token) => {
   const link = `https://consultoriodental.isoftuthh.com/reset-password/${token}`;
-const mailOptions = {
-  from: '20221030@uthh.edu.mx',
-  to: correo,
-  subject: 'Restablecimiento de Contraseña - Consultorio Dental',
-  html: `
+  const mailOptions = {
+    from: '20221030@uthh.edu.mx',
+    to: correo,
+    subject: 'Restablecimiento de Contraseña - Consultorio Dental',
+    html: `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; border-radius: 10px;">
       <div style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
         <h2 style="color: #01349c; text-align: center;">Restablecimiento de Contraseña</h2>
@@ -423,7 +443,7 @@ const mailOptions = {
       </div>
     </div>
   `,
-};
+  };
 
   try {
     await transporter.sendMail(mailOptions);
@@ -466,7 +486,7 @@ const solicitarRecuperacion = async (req, res) => {
 
 const cambiarContrasena = async (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
-  
+
   // Imprimir para verificar
   console.log("Token recibido:", token);
   console.log("Nueva contraseña recibida:", newPassword);
@@ -564,8 +584,8 @@ const modificarContrasena = async (req, res) => {
     // Validar la nueva contraseña (al menos una mayúscula, un número, un signo y 8 caracteres)
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      return res.status(400).json({ 
-        message: 'La nueva contraseña debe contener al menos una letra mayúscula, un número, un signo especial y ser de mínimo 8 caracteres.' 
+      return res.status(400).json({
+        message: 'La nueva contraseña debe contener al menos una letra mayúscula, un número, un signo especial y ser de mínimo 8 caracteres.'
       });
     }
 
@@ -625,17 +645,17 @@ const cambiarMaxIntentosFallidos = (req, res) => {
 
   // Validación
   if (!maxIntentos || isNaN(maxIntentos)) {
-      return res.status(400).json({ message: 'Valor inválido para máximo de intentos' });
+    return res.status(400).json({ message: 'Valor inválido para máximo de intentos' });
   }
 
 
   userModel.updateMaxIntentosFallidos(maxIntentos, (err, result) => {
-      if (err) {
-          console.error('Error al actualizar el máximo de intentos en la base de datos:', err);
-          return res.status(500).json({ message: 'Ocurrió un error en el servidor. Inténtalo de nuevo más tarde.' });
-      }
+    if (err) {
+      console.error('Error al actualizar el máximo de intentos en la base de datos:', err);
+      return res.status(500).json({ message: 'Ocurrió un error en el servidor. Inténtalo de nuevo más tarde.' });
+    }
 
-      res.status(200).json({ message: 'Máximo de intentos actualizado correctamente' });
+    res.status(200).json({ message: 'Máximo de intentos actualizado correctamente' });
   });
 };
 // Controlador para obtener el valor actual de los intentos fallidos
@@ -648,6 +668,44 @@ const obtenerMaxIntentos = (req, res) => {
     res.json({ maxIntentos });
   });
 };
+const obtenerUsuariosBloqueados = (req, res) => {
+  const { rango } = req.query; // Obtener el rango de la solicitud (dia, semana, mes)
+
+  userModel.obtenerUsuariosBloqueadosPorTiempo(rango, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al obtener los usuarios bloqueados.', error: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron usuarios bloqueados en el rango de tiempo seleccionado.' });
+    }
+
+    res.json(results); // Devolver los resultados
+  });
+};
+// Controlador para actualizar el estado de bloqueo del usuario
+const actualizarBloqueoUsuario = (req, res) => {
+  const { id } = req.params;
+  const { bloqueo } = req.body;
+
+
+  if (!id || typeof bloqueo !== 'number') {
+    return res.status(400).json({ message: 'Datos inválidos' });
+  }
+
+  userModel.actualizarEstadoBloqueo(parseInt(id), bloqueo, (err, result) => {
+    if (err) {
+      console.error('Error al actualizar el estado de bloqueo:', err);
+      return res.status(500).json({ message: 'Error interno al actualizar el estado de bloqueo.' });
+    }
+
+    res.json({ message: 'Estado de bloqueo actualizado correctamente' });
+  });
+};
+
+
+
+
 
 module.exports = {
   register,
@@ -664,5 +722,8 @@ module.exports = {
   modificarContrasena,
   getIncidencias,
   cambiarMaxIntentosFallidos,
-  obtenerMaxIntentos
+  obtenerMaxIntentos,
+  obtenerUsuariosBloqueados,
+  actualizarBloqueoUsuario,
+  
 };

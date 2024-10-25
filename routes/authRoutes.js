@@ -49,5 +49,8 @@ router.get('/incidencias', authController.getIncidencias); // Nueva ruta para ob
 router.post('/cambiar-max-intentos', authController.cambiarMaxIntentosFallidos);
 // Ruta para obtener el valor actual de los intentos fallidos
 router.get('/obtener-max-intentos', authController.obtenerMaxIntentos);
-
+// Ruta para obtener usuarios bloqueados en un rango de tiempo
+router.get('/usuarios-bloqueados', authController.obtenerUsuariosBloqueados);
+// Ruta para actualizar el estado de bloqueo del usuario
+router.put('/actualizar-bloqueo/:id', authController.actualizarBloqueoUsuario);
 module.exports = router; // Exporta el router para usar en tu servidor principal

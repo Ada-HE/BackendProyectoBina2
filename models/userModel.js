@@ -119,7 +119,7 @@ const savePasswordResetToken = (correo, token, expiration, callback) => {
 };
 // Función para buscar un usuario por su ID
 const findUserById = (id, callback) => {
-  const query = 'SELECT id, nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo FROM usuarios WHERE id = ?';
+  const query = 'SELECT id, nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo, cuenta_bloqueada FROM usuarios WHERE id = ?';
   db.query(query, [id], callback);
 };
 // Función para actualizar la contraseña del usuario por ID
@@ -164,6 +164,82 @@ const obtenerMaxIntentos = (callback) => {
     callback(null, maxIntentos);
   });
 };
+// Función para registrar un bloqueo en HistorialBloqueos
+const registrarBloqueoEnHistorial = (usuarioId, callback) => {
+  const query = `INSERT INTO HistorialBloqueos (usuario_id, fecha_bloqueo) VALUES (?, NOW())`;
+  db.query(query, [usuarioId], (err, result) => {
+    if (err) {
+      console.error('Error al registrar el bloqueo en el historial:', err);
+      return callback(err); // Devolver el error al callback
+    }
+    console.log(`Bloqueo registrado en el historial para el usuario ${usuarioId}`);
+    return callback(null, result); // Devolver el resultado al callback
+  });
+};
+
+// Función para obtener usuarios bloqueados por un rango de tiempo (día, semana, mes)
+const obtenerUsuariosBloqueadosPorTiempo = (rango, callback) => {
+  let intervalo;
+  
+  // Determinar el intervalo basado en el rango
+  switch (rango) {
+    case 'dia':
+      intervalo = 'INTERVAL 1 DAY';
+      break;
+    case 'semana':
+      intervalo = 'INTERVAL 1 WEEK';
+      break;
+    case 'mes':
+      intervalo = 'INTERVAL 1 MONTH';
+      break;
+    default:
+      return callback(new Error('Rango inválido'), null);
+  }
+
+  const query = `
+    SELECT u.id, u.nombre, u.correo, hb.fecha_bloqueo
+    FROM usuarios u
+    JOIN HistorialBloqueos hb ON u.id = hb.usuario_id
+    WHERE hb.fecha_bloqueo >= DATE_SUB(NOW(), ${intervalo})
+    ORDER BY hb.fecha_bloqueo DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error al obtener usuarios bloqueados:', err);
+      return callback(err, null);
+    }
+    callback(null, results);
+  });
+};
+// Función para actualizar el estado de bloqueo del usuario
+const actualizarEstadoBloqueo = (id, bloqueo, callback) => {
+  // Mostrar los datos recibidos en la consola para depuración
+
+  // Verificar que el id sea un número
+  if (typeof id !== 'number' || typeof bloqueo !== 'number') {
+    console.error('ID o bloqueo inválidos');
+    return callback(new Error('ID o valor de bloqueo inválidos'));
+  }
+
+  const query = 'UPDATE usuarios SET cuenta_bloqueada = ? WHERE id = ?';
+  
+  db.query(query, [bloqueo, id], (err, result) => {
+    if (err) {
+      console.error('Error al actualizar el estado de bloqueo del usuario:', err);
+      return callback(err);  // Retorna el error al callback para manejarlo
+    }
+
+    // Verificar si la actualización afectó alguna fila
+    if (result.affectedRows === 0) {
+      console.error(`No se encontró un usuario con el ID ${id}`);
+      return callback(new Error('Usuario no encontrado'));
+    }
+
+    callback(null, result);  // Retorna el resultado si la consulta fue exitosa
+  });
+};
+
 
 module.exports = {
   createUser,
@@ -186,5 +262,8 @@ module.exports = {
   registrarIncidencia,
   getIncidencias,
   updateMaxIntentosFallidos,
-  obtenerMaxIntentos
+  obtenerMaxIntentos,
+  registrarBloqueoEnHistorial,
+  obtenerUsuariosBloqueadosPorTiempo,
+  actualizarEstadoBloqueo
 };
