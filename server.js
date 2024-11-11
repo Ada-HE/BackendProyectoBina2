@@ -15,6 +15,7 @@ const authRedesSociales = require('./routes/socialMediaRoutes')
 const authEslogan = require('./routes/esloganRoutes')
 const authLogoNombre = require('./routes/logoNombreRoutes')
 const authContacto = require('./routes/contactoRoutes')
+const authEmpresaNombre = require('./routes/empresaNombreRoutes')
 
 const app = express();
 // Middleware para parsear JSON y cookies
@@ -65,6 +66,8 @@ app.use('/api', authRedesSociales);
 app.use('/api', authEslogan);
 app.use('/api', authLogoNombre);
 app.use('/api', authContacto);
+app.use('/api', authEmpresaNombre);
+
 
 
 

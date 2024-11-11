@@ -1,55 +1,42 @@
 const db = require('../db');
 
-const registrarLogoNombre = (nombre, logoUrl, callback) => {
-  const query = `
-    INSERT INTO logoNombre (nombre, logo)
-    VALUES (?, ?)
-    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), logo = VALUES(logo)
-  `;
-
-  db.query(query, [nombre, logoUrl], (err, result) => {
-    if (err) {
-      console.error('Error al registrar o actualizar en la base de datos:', err);
-      return callback(err, null);
-    }
-    console.log('Inserción exitosa en la base de datos.');
-    callback(null, result);
-  });
-};
-
-
-// Función para obtener el registro actual de nombre y logo
-const obtenerLogoNombre = (callback) => {
-  const query = `SELECT * FROM logoNombre LIMIT 1`;
-  
+const obtenerUltimaVersion = (callback) => {
+  const query = `SELECT version FROM logoNombre ORDER BY version DESC LIMIT 1`;
   db.query(query, (err, result) => {
     if (err) {
-      console.error('Error al obtener el nombre y logo:', err);
+      console.error("Error al obtener la última versión:", err);
       return callback(err, null);
     }
-    callback(null, result);
+    // Convertimos a número entero para evitar decimales y comenzamos en 1.0 si no hay registros previos
+    const ultimaVersion = result.length > 0 ? parseInt(result[0].version) : 1.0;
+    callback(null, ultimaVersion);
   });
 };
 
-// Función para actualizar el nombre y logo por ID
-const actualizarLogoNombre = (id, nombre, logoUrl, callback) => {
-  const query = `
-    UPDATE logoNombre 
-    SET nombre = ?, logo = ?
-    WHERE id = ?
-  `;
-  
-  db.query(query, [nombre, logoUrl, id], (err, result) => {
-    if (err) {
-      console.error('Error al actualizar el nombre y logo:', err);
-      return callback(err, null);
-    }
-    callback(null, result);
-  });
+const desactivarLogosAnteriores = (callback) => {
+  const query = `UPDATE logoNombre SET vigente = 0 WHERE vigente = 1`;
+  db.query(query, callback);
+};
+
+const registrarNuevoLogo = (logoUrl, version, callback) => {
+  const query = `INSERT INTO logoNombre (logo, version, vigente) VALUES (?, ?, 1)`;
+  db.query(query, [logoUrl, version.toFixed(1)], callback);
+};
+
+const obtenerLogoVigente = (callback) => {
+  const query = `SELECT * FROM logoNombre WHERE vigente = 1 LIMIT 1`;
+  db.query(query, callback);
+};
+
+const obtenerLogosNoVigentes = (callback) => {
+  const query = `SELECT * FROM logoNombre WHERE vigente = 0`;
+  db.query(query, callback);
 };
 
 module.exports = {
-  registrarLogoNombre,
-  obtenerLogoNombre,
-  actualizarLogoNombre,
+  obtenerUltimaVersion,
+  desactivarLogosAnteriores,
+  registrarNuevoLogo,
+  obtenerLogoVigente,
+  obtenerLogosNoVigentes,
 };

@@ -1,66 +1,72 @@
-const { registrarLogoNombre, actualizarLogoNombre, obtenerLogoNombre } = require('../models/logoNombreModel');
+const db = require('../db'); // Importación de db
+const { obtenerUltimaVersion, desactivarLogosAnteriores, registrarNuevoLogo, obtenerLogoVigente, obtenerLogosNoVigentes } = require('../models/logoNombreModel');
 
-exports.registrarLogoNombre = (req, res) => {
-  const { nombre } = req.body;
+exports.registrarLogo = (req, res) => {
   const logoUrl = req.file ? req.file.path : null;
 
-
-
-  if (!nombre || !logoUrl) {
-    return res.status(400).json({ error: 'El nombre y el logo son requeridos.' });
+  if (!logoUrl) {
+    return res.status(400).json({ error: 'El logo es requerido.' });
   }
 
-  registrarLogoNombre(nombre, logoUrl, (err, result) => {
+  obtenerUltimaVersion((err, ultimaVersion) => {
     if (err) {
-      console.error('Error al registrar en la base de datos:', err);
-      return res.status(500).json({ error: 'Error al registrar o actualizar el nombre y logo.' });
+      return res.status(500).json({ error: 'Error al obtener la última versión.' });
     }
-    res.json({ message: 'Registro o actualización realizada con éxito', logoUrl });
+
+    // Incrementamos la versión en 1.0 para cada nuevo registro
+    const nuevaVersion = ultimaVersion + 1.0;
+
+    desactivarLogosAnteriores((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al desactivar logos anteriores.' });
+      }
+
+      registrarNuevoLogo(logoUrl, nuevaVersion, (err, result) => {
+        if (err) {
+          return res.status(500).json({ error: 'Error al registrar el nuevo logo.' });
+        }
+        res.json({ message: 'Nuevo logo registrado como vigente con éxito', logoUrl });
+      });
+    });
   });
 };
 
-
-// Controlador para obtener el nombre y logo actuales
-exports.obtenerLogoNombre = (req, res) => {
-  obtenerLogoNombre((err, result) => {
+exports.obtenerLogoVigente = (req, res) => {
+  obtenerLogoVigente((err, result) => {
     if (err) {
-      console.error('Error al obtener los datos del logo y nombre:', err);
-      return res.status(500).json({ error: 'Error al obtener los datos del logo y nombre.' });
+      return res.status(500).json({ error: 'Error al obtener el logo vigente.' });
+    }
+    return res.json(result[0] || {});
+  });
+};
+
+exports.obtenerLogosNoVigentes = (req, res) => {
+  obtenerLogosNoVigentes((err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error al obtener los logos no vigentes.' });
     }
     return res.json(result);
   });
 };
 
-exports.actualizarLogoNombre = (req, res) => {
-  const { nombre } = req.body;
-  const logoUrl = req.file ? req.file.path : null; // Si hay archivo nuevo, se usa la URL de Cloudinary
-  const { id } = req.params;
+exports.activarLogo = (req, res) => {
+  const { id } = req.body;
 
   if (!id) {
-    return res.status(400).json({ error: 'Falta el ID del registro para actualizar.' });
+    return res.status(400).json({ error: 'Falta el ID del logo para activar.' });
   }
 
-  // Obtener los valores actuales para no sobreescribirlos si no se envían nuevos
-  obtenerLogoNombre((err, resultado) => {
+  desactivarLogosAnteriores((err) => {
     if (err) {
-      return res.status(500).json({ error: 'Error al obtener los datos actuales.' });
+      return res.status(500).json({ error: 'Error al desactivar logos anteriores.' });
     }
 
-    const registroActual = resultado[0];
-
-    // Si no se envía un nuevo nombre, usar el nombre actual
-    const nombreActualizado = nombre || registroActual.nombre;
-
-    // Si no se envía un nuevo logo, usar el logo actual
-    const logoActualizado = logoUrl || registroActual.logo;
-
-    // Actualizar el registro con los valores proporcionados
-    actualizarLogoNombre(id, nombreActualizado, logoActualizado, (err, result) => {
+    const query = `UPDATE logoNombre SET vigente = 1 WHERE id = ?`;
+    db.query(query, [id], (err) => {
       if (err) {
-        console.error('Error al actualizar en la base de datos:', err);
-        return res.status(500).json({ error: 'Error al actualizar el nombre y logo.' });
+        return res.status(500).json({ error: 'Error al activar el logo.' });
       }
-      res.json({ message: 'Actualización realizada con éxito', logoUrl: logoActualizado });
+      res.json({ message: 'Logo activado como vigente con éxito.' });
     });
   });
 };
