@@ -1,4 +1,6 @@
 const db = require('../db');
+const bcrypt = require('bcryptjs'); // Asegúrate de agregar esta línea
+
 
 // Función para crear un nuevo usuario con el campo mfa_secret
 const createUser = (nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo, password, tipo, codigoVerificacion, expirationTime, mfaSecret, callback) => {
@@ -80,7 +82,7 @@ const findUserByEmailOrPhone = (correo, telefono, callback) => {
 // Función para buscar un usuario por su reset_token
 const findUserByResetToken = (token, callback) => {
   const query = `
-    SELECT correo 
+    SELECT id, correo 
     FROM usuarios 
     WHERE reset_token = ? 
     AND reset_token_expiration > DATE_SUB(NOW(), INTERVAL 6 HOUR)
@@ -293,5 +295,6 @@ module.exports = {
   obtenerUsuariosBloqueadosPorTiempo,
   actualizarEstadoBloqueo,
   guardarPasswordEnHistorial,
+  verificarPasswordEnHistorial
   
 };

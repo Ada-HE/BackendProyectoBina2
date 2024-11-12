@@ -507,10 +507,10 @@ const solicitarRecuperacion = async (req, res) => {
 const cambiarContrasena = async (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
 
-  // Imprimir para verificar
+  /* Imprimir para verificar
   console.log("Token recibido:", token);
   console.log("Nueva contraseña recibida:", newPassword);
-  console.log("Confirmación de contraseña recibida:", confirmPassword);
+  console.log("Confirmación de contraseña recibida:", confirmPassword);*/
 
   // Validar que las contraseñas coincidan
   if (newPassword !== confirmPassword) {
@@ -524,20 +524,39 @@ const cambiarContrasena = async (req, res) => {
         return res.status(400).json({ message: 'Token inválido o expirado.' });
       }
 
-      const correo = result[0].correo;  // Obtener el correo del usuario con ese token
-      console.log("Usuario encontrado con el token, correo:", correo);
+      const { correo, id } = result[0]; // Obtener el correo y el id del usuario con ese token
+     // console.log("ID del usuario:", id);
+     // console.log("Usuario encontrado con el token, correo:", correo);
 
-      // Encriptar la nueva contraseña
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      // Actualizar la contraseña del usuario y limpiar el token y la expiración
-      userModel.updatePasswordByEmail(correo, hashedPassword, (err) => {
+      // Verificar si la nueva contraseña ya ha sido utilizada
+      userModel.verificarPasswordEnHistorial(id, newPassword, async (err, exists) => {
         if (err) {
-          return res.status(500).json({ message: 'Error al actualizar la contraseña.' });
+          return res.status(500).json({ message: 'Error al verificar el historial de contraseñas.' });
         }
 
-        console.log("Contraseña actualizada correctamente para el correo:", correo);
-        return res.json({ message: 'Contraseña actualizada exitosamente.' });
+        if (exists) {
+          return res.status(400).json({ message: 'La nueva contraseña ya ha sido usada anteriormente. Por favor, elige una contraseña diferente.' });
+        }
+
+        // Encriptar la nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar la contraseña del usuario y limpiar el token y la expiración
+        userModel.updatePasswordByEmail(correo, hashedPassword, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Error al actualizar la contraseña.' });
+          }
+
+          // Guardar la nueva contraseña en el historial
+          userModel.guardarPasswordEnHistorial(id, hashedPassword, (err) => {
+            if (err) {
+              console.error('Error al guardar la contraseña en el historial:', err);
+            }
+          });
+
+          //console.log("Contraseña actualizada correctamente para el correo:", correo);
+          return res.json({ message: 'Contraseña actualizada exitosamente.' });
+        });
       });
     });
   } catch (error) {
@@ -545,6 +564,7 @@ const cambiarContrasena = async (req, res) => {
     return res.status(500).json({ message: 'Error en el servidor.' });
   }
 };
+
 
 // Función para obtener los datos del perfil del usuario logueado
 const getUserProfile = (req, res) => {
