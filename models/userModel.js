@@ -239,7 +239,33 @@ const actualizarEstadoBloqueo = (id, bloqueo, callback) => {
     callback(null, result);  // Retorna el resultado si la consulta fue exitosa
   });
 };
+const guardarPasswordEnHistorial = (usuarioId, password, callback) => {
+  const query = 'INSERT INTO historial_password (usuario_id, password) VALUES (?, ?)';
+  db.query(query, [usuarioId, password], callback);
+};
 
+const verificarPasswordEnHistorial = (usuarioId, newPassword, callback) => {
+  const query = 'SELECT password FROM historial_password WHERE usuario_id = ?';
+
+  db.query(query, [usuarioId], async (err, results) => {
+    if (err) {
+      console.error("Error al consultar el historial de contraseñas:", err);
+      return callback(err, null);
+    }
+
+    // Verificar si alguna contraseña del historial coincide con la nueva
+    for (const record of results) {
+      const isMatch = await bcrypt.compare(newPassword, record.password);
+      if (isMatch) {
+        // Si coincide, significa que la nueva contraseña ya ha sido usada
+        return callback(null, true);
+      }
+    }
+
+    // Si ninguna coincide, la nueva contraseña no está en el historial
+    callback(null, false);
+  });
+};
 
 module.exports = {
   createUser,
@@ -265,5 +291,7 @@ module.exports = {
   obtenerMaxIntentos,
   registrarBloqueoEnHistorial,
   obtenerUsuariosBloqueadosPorTiempo,
-  actualizarEstadoBloqueo
+  actualizarEstadoBloqueo,
+  guardarPasswordEnHistorial,
+  
 };

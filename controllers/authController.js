@@ -146,9 +146,17 @@ const register = async (req, res) => {
                 return res.status(500).json({ error: 'Error al actualizar los datos del usuario' });
               }
 
-              // Enviar nuevo correo de verificación
-              enviarCorreoVerificacion(correo, nuevoCodigo);
-              return res.status(200).json({ message: 'Datos actualizados y código de verificación reenviado. Revisa tu correo para verificar tu cuenta.' });
+              // Guardar en el historial de contraseñas
+              userModel.guardarPasswordEnHistorial(usuario.id, hashedPassword, (err) => {
+                if (err) {
+                  console.error('Error al guardar la contraseña en el historial:', err);
+                  return res.status(500).json({ error: 'Error al guardar la contraseña en el historial' });
+                }
+
+                // Enviar nuevo correo de verificación
+                enviarCorreoVerificacion(correo, nuevoCodigo);
+                return res.status(200).json({ message: 'Datos actualizados y código de verificación reenviado. Revisa tu correo para verificar tu cuenta.' });
+              });
             }
           );
         }
@@ -160,15 +168,26 @@ const register = async (req, res) => {
         userModel.createUser(
           nombre, apellidoPaterno, apellidoMaterno, telefono, edad, sexo, correo,
           hashedPassword, tipo || 'paciente', codigoVerificacion, expirationTime, mfaSecret,
-          (err) => {
+          (err, result) => {
             if (err) {
               console.error('Error al crear el usuario:', err);
               return res.status(500).json({ error: 'Error al crear el usuario' });
             }
 
-            // Enviar correo de verificación
-            enviarCorreoVerificacion(correo, codigoVerificacion);
-            return res.status(201).json({ message: 'Usuario registrado con éxito. Revisa tu correo para verificar tu cuenta.' });
+            // Obtener el ID del usuario recién creado
+            const usuarioId = result.insertId;
+
+            // Guardar en el historial de contraseñas
+            userModel.guardarPasswordEnHistorial(usuarioId, hashedPassword, (err) => {
+              if (err) {
+                console.error('Error al guardar la contraseña en el historial:', err);
+                return res.status(500).json({ error: 'Error al guardar la contraseña en el historial' });
+              }
+
+              // Enviar correo de verificación
+              enviarCorreoVerificacion(correo, codigoVerificacion);
+              return res.status(201).json({ message: 'Usuario registrado con éxito. Revisa tu correo para verificar tu cuenta.' });
+            });
           }
         );
       }
@@ -178,6 +197,7 @@ const register = async (req, res) => {
     return res.status(500).json({ error: 'Error en el servidor' });
   }
 };
+
 
 // Verificar el código de verificación enviado al correo
 const verificarCodigo = (req, res) => {
