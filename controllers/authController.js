@@ -652,16 +652,33 @@ const modificarContrasena = async (req, res) => {
         return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
       }
 
-      // Encriptar la nueva contraseña
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      // Actualizar la contraseña en la base de datos
-      userModel.updatePasswordById(id, hashedPassword, (err) => {
+      // Verificar si la nueva contraseña ya ha sido utilizada en el historial
+      userModel.verificarPasswordEnHistorial(id, newPassword, async (err, exists) => {
         if (err) {
-          return res.status(500).json({ message: 'Error al actualizar la contraseña.' });
+          return res.status(500).json({ message: 'Error al verificar el historial de contraseñas.' });
         }
 
-        return res.json({ message: 'Contraseña actualizada exitosamente.' });
+        if (exists) {
+          return res.status(400).json({ message: 'La nueva contraseña ya ha sido usada anteriormente. Por favor, elige una contraseña diferente.' });
+        }
+
+        // Si la contraseña es nueva, encriptar y actualizar
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        userModel.updatePasswordById(id, hashedPassword, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Error al actualizar la contraseña.' });
+          }
+
+          // Guardar la nueva contraseña en el historial
+          userModel.guardarPasswordEnHistorial(id, hashedPassword, (err) => {
+            if (err) {
+              console.error('Error al guardar la contraseña en el historial:', err);
+            }
+          });
+
+          return res.json({ message: 'Contraseña actualizada exitosamente.' });
+        });
       });
     });
   } catch (error) {
@@ -669,6 +686,7 @@ const modificarContrasena = async (req, res) => {
     return res.status(500).json({ message: 'Error en el servidor.' });
   }
 };
+
 // Función para obtener las incidencias
 
 const getIncidencias = (req, res) => {
